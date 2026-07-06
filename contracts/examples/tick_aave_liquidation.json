@@ -1,0 +1,13 @@
+{
+  "block_number": 14733318,
+  "block_timestamp": "2022-05-09T03:34:11Z",
+  "protocol": "aave_v3",
+  "event_type": "liquidation",
+  "pool_address": "0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+  "token0": "0xa693b19d2931d498c5b318df961919bb4aee87a5",
+  "token1": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  "amount0": "1200000000000000000000",
+  "amount1": "980000000",
+  "tx_hash": "0x1111222233334444555566667777888899990000aaaabbbbccccddddeeeeffff",
+  "log_index": 5
+}

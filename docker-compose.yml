@@ -1,0 +1,17 @@
+services:
+  mock-wss:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: quantumradar/mock-wss:0.0.1
+    command: python -m tools.mock_wss --scenario luna --speed 100x --host 0.0.0.0
+    ports:
+      - "8546:8546"  # WebSocket eth_subscribe
+      - "8547:8547"  # health endpoint
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8547/health').status==200 else 1)"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped

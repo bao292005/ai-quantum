@@ -1,0 +1,130 @@
+{
+  "snapshot_id": "550e8400-e29b-41d4-a716-446655440000",
+  "block_range": { "start": 18500000, "end": 18500009 },
+  "created_at": "2023-10-24T12:03:00Z",
+  "nodes": [
+    {
+      "id": "protocol:uniswap_v3",
+      "type": "protocol",
+      "features": {
+        "tvl_usd": 4200000000.0,
+        "volume_24h_usd": 850000000.0,
+        "price_usd": 0.0,
+        "volatility": 0.12,
+        "connectivity": 0.85
+      }
+    },
+    {
+      "id": "protocol:aave_v3",
+      "type": "protocol",
+      "features": {
+        "tvl_usd": 6100000000.0,
+        "volume_24h_usd": 210000000.0,
+        "price_usd": 0.0,
+        "volatility": 0.08,
+        "connectivity": 0.9
+      }
+    },
+    {
+      "id": "pool:uniswap_v3:0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+      "type": "pool",
+      "features": {
+        "tvl_usd": 320000000.0,
+        "volume_24h_usd": 180000000.0,
+        "price_usd": 1815.42,
+        "volatility": 0.11,
+        "connectivity": 0.6
+      }
+    },
+    {
+      "id": "pool:aave_v3:0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+      "type": "pool",
+      "features": {
+        "tvl_usd": 890000000.0,
+        "volume_24h_usd": 45000000.0,
+        "price_usd": 0.0,
+        "volatility": 0.05,
+        "connectivity": 0.7
+      }
+    },
+    {
+      "id": "token:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "type": "token",
+      "features": {
+        "tvl_usd": 25000000000.0,
+        "volume_24h_usd": 5000000000.0,
+        "price_usd": 1.0,
+        "volatility": 0.001,
+        "connectivity": 0.95
+      }
+    },
+    {
+      "id": "token:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "type": "token",
+      "features": {
+        "tvl_usd": 3000000000.0,
+        "volume_24h_usd": 900000000.0,
+        "price_usd": 1815.42,
+        "volatility": 0.12,
+        "connectivity": 0.88
+      }
+    }
+  ],
+  "edges": [
+    {
+      "src": "pool:uniswap_v3:0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+      "dst": "token:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "weight": 0.5,
+      "edge_type": "liquidity_flow"
+    },
+    {
+      "src": "pool:uniswap_v3:0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+      "dst": "token:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "weight": 0.5,
+      "edge_type": "liquidity_flow"
+    },
+    {
+      "src": "pool:aave_v3:0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+      "dst": "token:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "weight": 0.42,
+      "edge_type": "liquidity_flow"
+    },
+    {
+      "src": "pool:aave_v3:0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+      "dst": "token:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "weight": 0.58,
+      "edge_type": "borrow_position",
+      "metadata": {
+        "position_health": 1.32,
+        "borrower_count": 214
+      }
+    },
+    {
+      "src": "protocol:uniswap_v3",
+      "dst": "pool:uniswap_v3:0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+      "weight": 0.9,
+      "edge_type": "liquidity_flow"
+    },
+    {
+      "src": "protocol:aave_v3",
+      "dst": "pool:aave_v3:0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+      "weight": 0.95,
+      "edge_type": "liquidity_flow"
+    },
+    {
+      "src": "pool:uniswap_v3:0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640",
+      "dst": "pool:aave_v3:0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+      "weight": 0.35,
+      "edge_type": "shared_collateral"
+    },
+    {
+      "src": "token:0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+      "dst": "token:0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "weight": 0.25,
+      "edge_type": "shared_collateral",
+      "metadata": {
+        "correlation_30d": 0.18
+      }
+    }
+  ]
+}

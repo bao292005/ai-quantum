@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://quantumradar.io/schemas/graph_snapshot.schema.json",
+  "title": "GraphSnapshot",
+  "description": "Snapshot of the DeFi state graph fed to Epic 2/3 tensor pipeline. Contract locked; adding node/edge attributes is a breaking change (bump $id path).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["snapshot_id", "block_range", "created_at", "nodes", "edges"],
+  "properties": {
+    "snapshot_id": {
+      "type": "string",
+      "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-4[0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$",
+      "description": "UUID v4 identifier."
+    },
+    "block_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["start", "end"],
+      "description": "Inclusive block range covered by this snapshot. end >= start is enforced by the loader runtime check (JSON Schema cannot cross-reference sibling properties without dynamic anchors).",
+      "properties": {
+        "start": { "type": "integer", "minimum": 0 },
+        "end": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/$defs/edge" }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "features"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "type": {
+          "type": "string",
+          "enum": ["protocol", "pool", "token"]
+        },
+        "features": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "tvl_usd",
+            "volume_24h_usd",
+            "price_usd",
+            "volatility",
+            "connectivity"
+          ],
+          "properties": {
+            "tvl_usd": { "type": "number", "minimum": 0 },
+            "volume_24h_usd": { "type": "number", "minimum": 0 },
+            "price_usd": { "type": "number", "minimum": 0 },
+            "volatility": { "type": "number", "minimum": 0 },
+            "connectivity": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        }
+      }
+    },
+    "edge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["src", "dst", "weight", "edge_type"],
+      "properties": {
+        "src": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "dst": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "weight": { "type": "number", "minimum": 0, "maximum": 1 },
+        "edge_type": {
+          "type": "string",
+          "enum": ["liquidity_flow", "borrow_position", "shared_collateral"]
+        },
+        "metadata": {
+          "type": "object",
+          "additionalProperties": true,
+          "maxProperties": 32,
+          "description": "Optional free-form annotations. Bounded to 32 keys to keep payload sizes predictable; downstream consumers MAY drop this field."
+        }
+      }
+    }
+  }
+}

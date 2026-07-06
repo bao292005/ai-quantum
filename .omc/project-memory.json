@@ -1,0 +1,385 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1783241096228,
+  "projectRoot": "/Users/nguyenquocbao/ai-quantum",
+  "techStack": {
+    "languages": [],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": null,
+    "lintCommand": null,
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "_bmad": {
+      "path": "_bmad",
+      "purpose": null,
+      "fileCount": 2,
+      "lastAccessed": 1783241096207,
+      "keyFiles": [
+        "config.toml",
+        "config.user.toml"
+      ]
+    },
+    "_bmad-output": {
+      "path": "_bmad-output",
+      "purpose": null,
+      "fileCount": 4,
+      "lastAccessed": 1783241096218,
+      "keyFiles": [
+        "1-1-web3-rpc-websocket-connection.md",
+        "epics.md",
+        "prfaq-mps-defi-risk.md",
+        "sprint-status.yaml"
+      ]
+    },
+    "design-artifacts": {
+      "path": "design-artifacts",
+      "purpose": null,
+      "fileCount": 0,
+      "lastAccessed": 1783241096218,
+      "keyFiles": []
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 0,
+      "lastAccessed": 1783241096221,
+      "keyFiles": []
+    },
+    "_bmad/scripts": {
+      "path": "_bmad/scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 3,
+      "lastAccessed": 1783241096222,
+      "keyFiles": [
+        "memlog.py",
+        "resolve_config.py",
+        "resolve_customization.py"
+      ]
+    }
+  },
+  "hotPaths": [
+    {
+      "path": "_bmad-output/sprint-status.yaml",
+      "accessCount": 42,
+      "lastAccessed": 1783324359153,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/epics.md",
+      "accessCount": 31,
+      "lastAccessed": 1783324163343,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/0-5-mock-websocket-server.md",
+      "accessCount": 26,
+      "lastAccessed": 1783324144576,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/0-4-historical-backtest-fixtures.md",
+      "accessCount": 24,
+      "lastAccessed": 1783265653097,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/0-1-tick-data-json-schema.md",
+      "accessCount": 18,
+      "lastAccessed": 1783261736189,
+      "type": "file"
+    },
+    {
+      "path": "core/schemas/__init__.py",
+      "accessCount": 14,
+      "lastAccessed": 1783266086180,
+      "type": "file"
+    },
+    {
+      "path": "tools/extract_fixtures.py",
+      "accessCount": 13,
+      "lastAccessed": 1783263203364,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/0-3-fragility-payload-schema.md",
+      "accessCount": 11,
+      "lastAccessed": 1783259227882,
+      "type": "file"
+    },
+    {
+      "path": "tools/verify_fixtures.py",
+      "accessCount": 11,
+      "lastAccessed": 1783265506370,
+      "type": "file"
+    },
+    {
+      "path": "pyproject.toml",
+      "accessCount": 11,
+      "lastAccessed": 1783324127056,
+      "type": "file"
+    },
+    {
+      "path": "fixtures/backtest/README.md",
+      "accessCount": 11,
+      "lastAccessed": 1783324128023,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/implementation-artifacts/0-2-graph-object-json-schema.md",
+      "accessCount": 9,
+      "lastAccessed": 1783258822638,
+      "type": "file"
+    },
+    {
+      "path": "contracts/tick_data.schema.json",
+      "accessCount": 9,
+      "lastAccessed": 1783264469844,
+      "type": "file"
+    },
+    {
+      "path": "contracts/graph_snapshot.schema.json",
+      "accessCount": 6,
+      "lastAccessed": 1783258637751,
+      "type": "file"
+    },
+    {
+      "path": "fixtures/backtest/queries/luna.sql",
+      "accessCount": 4,
+      "lastAccessed": 1783262568834,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-code-review/steps/step-01-gather-context.md",
+      "accessCount": 4,
+      "lastAccessed": 1783267854227,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-code-review/steps/step-03-triage.md",
+      "accessCount": 4,
+      "lastAccessed": 1783268494217,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/architecture/architecture-mps-defi-risk/ARCHITECTURE-SPINE.md",
+      "accessCount": 4,
+      "lastAccessed": 1783325790088,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/test_fixtures.py",
+      "accessCount": 3,
+      "lastAccessed": 1783267377970,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-code-review/steps/step-02-review.md",
+      "accessCount": 3,
+      "lastAccessed": 1783268003992,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/test_graph_schema.py",
+      "accessCount": 2,
+      "lastAccessed": 1783258653265,
+      "type": "file"
+    },
+    {
+      "path": "contracts/fragility_alert.schema.json",
+      "accessCount": 2,
+      "lastAccessed": 1783259113101,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-create-story/template.md",
+      "accessCount": 2,
+      "lastAccessed": 1783323772589,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/implementation-readiness-report-2026-07-05-v2.md",
+      "accessCount": 2,
+      "lastAccessed": 1783323784262,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-create-story/checklist.md",
+      "accessCount": 2,
+      "lastAccessed": 1783323785722,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/briefs/brief-mps-defi-risk-20260703/brief.md",
+      "accessCount": 2,
+      "lastAccessed": 1783325789002,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/specs/spec-mps-defi-risk/SPEC.md",
+      "accessCount": 2,
+      "lastAccessed": 1783325789386,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-check-implementation-readiness/steps/step-01-document-discovery.md",
+      "accessCount": 1,
+      "lastAccessed": 1783242905438,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-check-implementation-readiness/steps/step-02-prd-analysis.md",
+      "accessCount": 1,
+      "lastAccessed": 1783243021088,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-check-implementation-readiness/templates/readiness-report-template.md",
+      "accessCount": 1,
+      "lastAccessed": 1783243021147,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/1-1-web3-rpc-websocket-connection.md",
+      "accessCount": 1,
+      "lastAccessed": 1783243032725,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/prfaq-mps-defi-risk.md",
+      "accessCount": 1,
+      "lastAccessed": 1783243032933,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-check-implementation-readiness/steps/step-04-ux-alignment.md",
+      "accessCount": 1,
+      "lastAccessed": 1783243051729,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-check-implementation-readiness/steps/step-06-final-assessment.md",
+      "accessCount": 1,
+      "lastAccessed": 1783243051756,
+      "type": "file"
+    },
+    {
+      "path": ".claude/skills/bmad-check-implementation-readiness/steps/step-05-epic-quality-review.md",
+      "accessCount": 1,
+      "lastAccessed": 1783243051792,
+      "type": "file"
+    },
+    {
+      "path": "_bmad-output/planning-artifacts/implementation-readiness-report-2026-07-05.md",
+      "accessCount": 1,
+      "lastAccessed": 1783243200343,
+      "type": "file"
+    },
+    {
+      "path": "contracts/examples/tick_uniswap_swap.json",
+      "accessCount": 1,
+      "lastAccessed": 1783256520677,
+      "type": "file"
+    },
+    {
+      "path": "contracts/examples/tick_aave_borrow.json",
+      "accessCount": 1,
+      "lastAccessed": 1783256532956,
+      "type": "file"
+    },
+    {
+      "path": "contracts/examples/tick_aave_liquidation.json",
+      "accessCount": 1,
+      "lastAccessed": 1783256542608,
+      "type": "file"
+    },
+    {
+      "path": "core/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1783256620066,
+      "type": "file"
+    },
+    {
+      "path": "tests/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1783256909794,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/__init__.py",
+      "accessCount": 1,
+      "lastAccessed": 1783256932154,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/test_tick_schema.py",
+      "accessCount": 1,
+      "lastAccessed": 1783256970976,
+      "type": "file"
+    },
+    {
+      "path": "contracts/examples/graph_snapshot_example.json",
+      "accessCount": 1,
+      "lastAccessed": 1783258325329,
+      "type": "file"
+    },
+    {
+      "path": "contracts/examples/payload_yellow.json",
+      "accessCount": 1,
+      "lastAccessed": 1783258903449,
+      "type": "file"
+    },
+    {
+      "path": "contracts/examples/payload_red.json",
+      "accessCount": 1,
+      "lastAccessed": 1783258907625,
+      "type": "file"
+    },
+    {
+      "path": "tests/unit/test_payload_schema.py",
+      "accessCount": 1,
+      "lastAccessed": 1783258956281,
+      "type": "file"
+    },
+    {
+      "path": "fixtures/backtest/queries/ftx.sql",
+      "accessCount": 1,
+      "lastAccessed": 1783260804705,
+      "type": "file"
+    },
+    {
+      "path": "fixtures/backtest/queries/normal.sql",
+      "accessCount": 1,
+      "lastAccessed": 1783260825971,
+      "type": "file"
+    },
+    {
+      "path": "fixtures/backtest/queries/README.md",
+      "accessCount": 1,
+      "lastAccessed": 1783260847092,
+      "type": "file"
+    }
+  ],
+  "userDirectives": []
+}

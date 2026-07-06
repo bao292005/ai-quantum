@@ -1,0 +1,13 @@
+{
+  "block_number": 18500123,
+  "block_timestamp": "2023-10-24T12:25:47Z",
+  "protocol": "aave_v3",
+  "event_type": "borrow",
+  "pool_address": "0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2",
+  "token0": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+  "token1": "0x0000000000000000000000000000000000000000",
+  "amount0": "50000000000",
+  "amount1": "0",
+  "tx_hash": "0xdef0def0def0def0def0def0def0def0def0def0def0def0def0def0def0def0",
+  "log_index": 17
+}

@@ -1,0 +1,6 @@
+{
+  "timestamp": "2022-05-09T03:34:00Z",
+  "fragility_score": 94.10,
+  "alert_level": "RED",
+  "trigger_protocols": ["uniswap_v3", "aave_v3"]
+}
