@@ -1,77 +1,141 @@
 # generated: 2026-07-03T16:15:00Z
-# last_updated: 2026-07-03T16:15:00Z
+# last_updated: 2026-07-06T01:15:00Z
 # project: QuantumRadar
 # project_key: NOKEY
 # tracking_system: file-system
 # story_location: /Users/nguyenquocbao/ai-quantum/_bmad-output
+# revision: v3.1-research-build-split
 
 # STATUS DEFINITIONS:
 # ==================
-# Epic Status:
-#   - backlog: Epic not yet started
-#   - in-progress: Epic actively being worked on
-#   - done: All stories in epic completed
-#
-# Epic Status Transitions:
-#   - backlog → in-progress: Automatically when first story is created (via create-story)
-#   - in-progress → done: Manually when all stories reach 'done' status
-#
-# Story Status:
-#   - backlog: Story only exists in epic file
-#   - ready-for-dev: Story file created in stories folder
-#   - in-progress: Developer actively working on implementation
-#   - review: Ready for code review (via Dev's code-review workflow)
-#   - done: Story completed
-#
-# Retrospective Status:
-#   - optional: Can be completed but not required
-#   - done: Retrospective has been completed
-#
-# Action Item Status:
-#   - open: Committed during a retrospective, not yet addressed
-#   - in-progress: Actively being worked on
-#   - done: Completed
-#
-# WORKFLOW NOTES:
-# ===============
-# - Epic transitions to 'in-progress' automatically when first story is created
-# - Stories can be worked in parallel if team capacity allows
-# - Developer typically creates next story after previous one is 'done' to incorporate learnings
-# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
-# - Retrospective appends its action items to action_items; sprint-status surfaces open ones
+# Epic Status:  backlog | in-progress | done
+# Story Status: backlog | ready-for-dev | in-progress | review | done
 
 generated: 2026-07-03T16:15:00Z
-last_updated: 2026-07-03T16:15:00Z
+last_updated: 2026-07-06T01:15:00Z
 project: QuantumRadar
 project_key: NOKEY
 tracking_system: file-system
 story_location: /Users/nguyenquocbao/ai-quantum/_bmad-output
 
 development_status:
+  # ---------- Epic 0: Contracts & Fixtures (unblocks parallel work) ----------
+  epic-0: in-progress
+  0-1-tick-data-json-schema: done
+  0-2-graph-object-json-schema: done
+  0-3-fragility-payload-schema: done
+  0-4-historical-backtest-fixtures: done
+  0-5-mock-websocket-server: done
+  epic-0-retrospective: optional
+
+  # ---------- Epic 1: Data Ingestion (6 tracks: 1R research + 1A-1E) ----------
   epic-1: in-progress
+  # Track 1R - Data Sourcing & Ground Truth (research, non-code)
+  1R-1-data-source-assessment: backlog          # P1
+  1R-2-schema-abi-reconciliation: ready-for-dev  # P0 - blocks 1B decoders
+  1R-3-ground-truth-labeling: backlog           # P1 - blocks Epic 4 verify
+  # Track 1A - Realtime WebSocket
+  1A-1-env-secrets-loader: backlog
+  1A-2-asyncweb3-client-wrapper: backlog
+  1A-3-exponential-backoff-reconnector: backlog
+  1A-4-newheads-subscription: backlog
+  1A-5-heartbeat-metrics: backlog
+  # Legacy story mapping: 1-1-web3-rpc-websocket-connection.md covers 1A.1-1A.4
   1-1-web3-rpc-websocket-connection: ready-for-dev
-  1-2-defi-event-filter: backlog
-  1-3-in-memory-ring-buffer: backlog
-  1-4-orchestrate-data-pipeline: backlog
-  1-5-data-quality-validation-profiling: backlog
-  1-6-airflow-batch-orchestration-automation: backlog
+  # Track 1B - Event Decoding
+  1B-1-uniswap-v3-event-decoder: backlog
+  1B-2-aave-v3-event-decoder: backlog
+  1B-3-contract-address-whitelist: backlog
+  1B-4-event-router-normalizer: backlog
+  # Track 1C - Ring Buffer
+  1C-1-ring-buffer-interface: backlog
+  1C-2-deque-ring-buffer: backlog
+  1C-3-numpy-static-array-variant: backlog
+  1C-4-asyncio-safe-wrapper: backlog
+  # Track 1D - CSV Historical
+  1D-1-csv-schema-mapping: backlog
+  1D-2-csv-streamer: backlog
+  1D-3-backtest-replay-driver: backlog
+  # Track 1E - Integration
+  1E-1-pipeline-orchestrator: backlog
+  1E-2-etherscan-reconciliation-tool: backlog
+  1E-3-data-quality-profiling-report: backlog
   epic-1-retrospective: optional
+
+  # ---------- Epic 2: Tensor Graph Modeling (4 tracks: 2R research + 2A-2C) ----------
   epic-2: backlog
-  2-1-json-to-graph-data-adapter: backlog
-  2-2-graph-to-pytorch-tensor-mapping: backlog
-  2-3-tensor-representation-validation: backlog
+  # Track 2R - Model Input Design (research, non-code)
+  2R-1-node-feature-catalog: ready-for-dev  # P0 - blocks 2B.2
+  2R-2-graph-topology-design: ready-for-dev  # P0 - blocks tensor shape 2B.*
+  # Track 2A - Graph Construction
+  2A-1-node-type-schema: backlog
+  2A-2-edge-type-schema: backlog
+  2A-3-graph-builder-networkx: backlog
+  2A-4-edge-weight-formula: backlog
+  # Track 2B - Tensor Mapping
+  2B-1-adjacency-tensor-constructor: backlog
+  2B-2-node-feature-tensor: backlog
+  2B-3-normalization-layer: backlog
+  2B-4-sparse-tensor-variant: backlog
+  # Track 2C - Validation
+  2C-1-tensor-invariant-tests: backlog
+  2C-2-heatmap-visualization: backlog
+  2C-3-reference-dataset-comparison: backlog
   epic-2-retrospective: optional
+
+  # ---------- Epic 3: MPS Algorithm Optimization (6 tracks: 3R design + 3A-3E) ----------
   epic-3: backlog
-  3-1-mps-baseline-benchmark: backlog
-  3-2-bond-dimension-tuning-profiler: backlog
-  3-3-svd-truncation-implementation: backlog
+  # Track 3R - Model & Math Design (research, non-code) - PREREQUISITE
+  3R-1-mps-fragility-math-spec: ready-for-dev  # P0 - blocks all Epic 3
+  3R-2-literature-review: backlog             # P1
+  3R-3-naive-baseline-detector: backlog       # P1
+  # Track 3A - Baseline
+  3A-1-naive-tensor-contraction: backlog
+  3A-2-pytest-benchmark-harness: backlog
+  3A-3-memory-profiler-integration: backlog
+  3A-4-baseline-metrics-report: backlog
+  # Track 3B - Bond Dimension
+  3B-1-bond-dimension-runner: backlog
+  3B-2-tradeoff-matrix-generator: backlog
+  3B-3-accuracy-speed-visualization: backlog
+  # Track 3C - SVD Truncation
+  3C-1-svd-decomposition-wrapper: backlog
+  3C-2-truncation-threshold-selector: backlog
+  3C-3-recompression-pipeline: backlog
+  3C-4-numerical-stability-guard: backlog
+  # Track 3D - Kernel Optimization
+  3D-1-contraction-path-optimizer: backlog
+  3D-2-torchscript-compilation: backlog
+  3D-3-tensor-reuse-cache-warmup: backlog
+  # Track 3E - End-to-End Verification
+  3E-1-mps-forward-pass-gate: backlog
+  3E-2-regression-suite: backlog
   epic-3-retrospective: optional
+
+  # ---------- Epic 4: Risk Calibration & Isolation ----------
   epic-4: backlog
-  4-1-fragility-index-calibration: backlog
-  4-2-math-engine-multiprocessing-wrapper: backlog
+  # Architecture & Latency Design (research, non-code)
+  4R-1-latency-budget: ready-for-dev   # P0 - blocks all perf gates
+  4R-2-ipc-mechanism-spike: backlog    # P1 - blocks 4.3
+  4R-3-failure-mode-analysis: backlog  # P1
+  4R-4-data-flow-diagram: backlog      # P1
+  4-1-luna-ust-fragility-calibration: backlog
+  4-2-ftx-cross-validation: backlog
+  4-3-multiprocessing-wrapper: backlog
+  4-4-backpressure-circuit-breaker: backlog
   epic-4-retrospective: optional
+
+  # ---------- Epic 5: Alert System & API ----------
   epic-5: backlog
-  5-1-fastapi-webhook-subscription: backlog
+  5-1-fastapi-subscribe-unsubscribe: backlog
   5-2-json-payload-formatter: backlog
   5-3-async-webhook-emitter: backlog
+  5-4-api-authentication: backlog
   epic-5-retrospective: optional
+
+  # ---------- Epic 6: E2E Verification & NFR Audit ----------
+  epic-6: backlog
+  6-1-e2e-latency-benchmark: backlog
+  6-2-no-gpu-runtime-verify: backlog
+  6-3-success-signal-proof: backlog
+  epic-6-retrospective: optional
