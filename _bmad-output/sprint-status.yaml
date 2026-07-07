@@ -1,5 +1,5 @@
 # generated: 2026-07-03T16:15:00Z
-# last_updated: 2026-07-06T09:00:00Z
+# last_updated: 2026-07-06T11:00:00Z
 # project: QuantumRadar
 # project_key: NOKEY
 # tracking_system: file-system
@@ -12,7 +12,7 @@
 # Story Status: backlog | ready-for-dev | in-progress | review | done
 
 generated: 2026-07-03T16:15:00Z
-last_updated: 2026-07-06T09:00:00Z
+last_updated: 2026-07-06T11:00:00Z
 project: QuantumRadar
 project_key: NOKEY
 tracking_system: file-system
@@ -35,9 +35,9 @@ development_status:
   1R-2-schema-abi-reconciliation: ready-for-dev  # P0 - blocks 1B decoders
   1R-3-ground-truth-labeling: ready-for-dev     # P1 - blocks Epic 4 verify
   # Track 1A - Realtime WebSocket
-  1A-1-env-secrets-loader: ready-for-dev
-  1A-2-asyncweb3-client-wrapper: ready-for-dev
-  1A-3-exponential-backoff-reconnector: ready-for-dev
+  1A-1-env-secrets-loader: done
+  1A-2-asyncweb3-client-wrapper: done
+  1A-3-exponential-backoff-reconnector: done
   1A-4-newheads-subscription: ready-for-dev
   1A-5-heartbeat-metrics: ready-for-dev
   # Legacy story mapping: 1-1-web3-rpc-websocket-connection.md covers 1A.1-1A.4

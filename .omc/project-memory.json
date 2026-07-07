@@ -1,17 +1,32 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1783241096228,
+  "lastScanned": 1783328125427,
   "projectRoot": "/Users/nguyenquocbao/ai-quantum",
   "techStack": {
-    "languages": [],
-    "frameworks": [],
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "pytest",
+        "version": null,
+        "category": "testing"
+      }
+    ],
     "packageManager": null,
     "runtime": null
   },
   "build": {
     "buildCommand": null,
-    "testCommand": null,
-    "lintCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
     "devCommand": null,
     "scripts": {}
   },
@@ -25,7 +40,8 @@
     "isMonorepo": false,
     "workspaces": [],
     "mainDirectories": [
-      "docs"
+      "docs",
+      "tests"
     ],
     "gitBranches": null
   },
@@ -35,7 +51,7 @@
       "path": "_bmad",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1783241096207,
+      "lastAccessed": 1783328125396,
       "keyFiles": [
         "config.toml",
         "config.user.toml"
@@ -44,46 +60,138 @@
     "_bmad-output": {
       "path": "_bmad-output",
       "purpose": null,
-      "fileCount": 4,
-      "lastAccessed": 1783241096218,
+      "fileCount": 5,
+      "lastAccessed": 1783328125397,
       "keyFiles": [
-        "1-1-web3-rpc-websocket-connection.md",
+        "QuantumRadar-Sprint-Tracker.xlsx",
         "epics.md",
         "prfaq-mps-defi-risk.md",
-        "sprint-status.yaml"
+        "sprint-status.yaml",
+        "~$QuantumRadar-Sprint-Tracker.xlsx"
+      ]
+    },
+    "contracts": {
+      "path": "contracts",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1783328125397,
+      "keyFiles": [
+        "fragility_alert.schema.json",
+        "graph_snapshot.schema.json",
+        "tick_data.schema.json"
+      ]
+    },
+    "core": {
+      "path": "core",
+      "purpose": null,
+      "fileCount": 1,
+      "lastAccessed": 1783328125398,
+      "keyFiles": [
+        "__init__.py"
       ]
     },
     "design-artifacts": {
       "path": "design-artifacts",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1783241096218,
+      "lastAccessed": 1783328125398,
       "keyFiles": []
     },
     "docs": {
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 0,
-      "lastAccessed": 1783241096221,
+      "lastAccessed": 1783328125398,
       "keyFiles": []
+    },
+    "fixtures": {
+      "path": "fixtures",
+      "purpose": "Test fixtures",
+      "fileCount": 0,
+      "lastAccessed": 1783328125399,
+      "keyFiles": []
+    },
+    "ingestion": {
+      "path": "ingestion",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1783328125399,
+      "keyFiles": [
+        "__init__.py",
+        "client.py",
+        "config.py"
+      ]
+    },
+    "quantumradar.egg-info": {
+      "path": "quantumradar.egg-info",
+      "purpose": null,
+      "fileCount": 5,
+      "lastAccessed": 1783328125399,
+      "keyFiles": [
+        "PKG-INFO",
+        "SOURCES.txt",
+        "dependency_links.txt",
+        "requires.txt",
+        "top_level.txt"
+      ]
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 1,
+      "lastAccessed": 1783328125399,
+      "keyFiles": [
+        "__init__.py"
+      ]
+    },
+    "tools": {
+      "path": "tools",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1783328125400,
+      "keyFiles": [
+        "__init__.py",
+        "extract_fixtures.py",
+        "verify_fixtures.py"
+      ]
     },
     "_bmad/scripts": {
       "path": "_bmad/scripts",
       "purpose": "Build/utility scripts",
       "fileCount": 3,
-      "lastAccessed": 1783241096222,
+      "lastAccessed": 1783328125400,
       "keyFiles": [
         "memlog.py",
         "resolve_config.py",
         "resolve_customization.py"
+      ]
+    },
+    "contracts/examples": {
+      "path": "contracts/examples",
+      "purpose": "Example code",
+      "fileCount": 6,
+      "lastAccessed": 1783328125400,
+      "keyFiles": [
+        "graph_snapshot_example.json",
+        "payload_red.json",
+        "payload_yellow.json"
+      ]
+    },
+    "core/schemas": {
+      "path": "core/schemas",
+      "purpose": "Schema definitions",
+      "fileCount": 1,
+      "lastAccessed": 1783328125400,
+      "keyFiles": [
+        "__init__.py"
       ]
     }
   },
   "hotPaths": [
     {
       "path": "_bmad-output/sprint-status.yaml",
-      "accessCount": 42,
-      "lastAccessed": 1783324359153,
+      "accessCount": 52,
+      "lastAccessed": 1783400925560,
       "type": "file"
     },
     {
@@ -123,6 +231,12 @@
       "type": "file"
     },
     {
+      "path": "pyproject.toml",
+      "accessCount": 13,
+      "lastAccessed": 1783327971671,
+      "type": "file"
+    },
+    {
       "path": "_bmad-output/implementation-artifacts/0-3-fragility-payload-schema.md",
       "accessCount": 11,
       "lastAccessed": 1783259227882,
@@ -132,12 +246,6 @@
       "path": "tools/verify_fixtures.py",
       "accessCount": 11,
       "lastAccessed": 1783265506370,
-      "type": "file"
-    },
-    {
-      "path": "pyproject.toml",
-      "accessCount": 11,
-      "lastAccessed": 1783324127056,
       "type": "file"
     },
     {
@@ -165,21 +273,21 @@
       "type": "file"
     },
     {
-      "path": "fixtures/backtest/queries/luna.sql",
-      "accessCount": 4,
-      "lastAccessed": 1783262568834,
-      "type": "file"
-    },
-    {
       "path": ".claude/skills/bmad-code-review/steps/step-01-gather-context.md",
-      "accessCount": 4,
-      "lastAccessed": 1783267854227,
+      "accessCount": 5,
+      "lastAccessed": 1783400500338,
       "type": "file"
     },
     {
       "path": ".claude/skills/bmad-code-review/steps/step-03-triage.md",
+      "accessCount": 5,
+      "lastAccessed": 1783400668609,
+      "type": "file"
+    },
+    {
+      "path": "fixtures/backtest/queries/luna.sql",
       "accessCount": 4,
-      "lastAccessed": 1783268494217,
+      "lastAccessed": 1783262568834,
       "type": "file"
     },
     {
@@ -189,15 +297,15 @@
       "type": "file"
     },
     {
-      "path": "tests/unit/test_fixtures.py",
-      "accessCount": 3,
-      "lastAccessed": 1783267377970,
+      "path": ".claude/skills/bmad-code-review/steps/step-02-review.md",
+      "accessCount": 4,
+      "lastAccessed": 1783400552118,
       "type": "file"
     },
     {
-      "path": ".claude/skills/bmad-code-review/steps/step-02-review.md",
+      "path": "tests/unit/test_fixtures.py",
       "accessCount": 3,
-      "lastAccessed": 1783268003992,
+      "lastAccessed": 1783267377970,
       "type": "file"
     },
     {

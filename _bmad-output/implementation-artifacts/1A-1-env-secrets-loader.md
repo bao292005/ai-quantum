@@ -1,11 +1,11 @@
 ---
-baseline_commit: aa9487a
+baseline_commit: 55c0cec9cf4d68710d43aee977f63ec0d16bb522
 type: build
 ---
 
 # Story 1A.1: Environment & Secrets Loader
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -38,24 +38,24 @@ so that **không hard-code credential và mọi Track 1A-1E import cùng một i
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Tạo ingestion package** (AC5, AC7)
-  - [ ] Tạo `ingestion/__init__.py` (rỗng)
-  - [ ] Cập nhật `pyproject.toml`: thêm `"ingestion*"` vào `include` list
-  - [ ] Retire legacy story overlap: ghi note trong `_bmad-output/sprint-status.yaml` rằng `1-1-web3-rpc-websocket-connection` được thay thế bởi 1A.1-1A.4 (không xóa file để preserve history)
+- [x] **Task 1 — Tạo ingestion package** (AC5, AC7)
+  - [x] Tạo `ingestion/__init__.py` (rỗng)
+  - [x] Cập nhật `pyproject.toml`: thêm `"ingestion*"` vào `include` list
+  - [x] Retire legacy story overlap: ghi note trong `_bmad-output/sprint-status.yaml` rằng `1-1-web3-rpc-websocket-connection` được thay thế bởi 1A.1-1A.4 (không xóa file để preserve history)
 
-- [ ] **Task 2 — Implement config.py** (AC1, AC2, AC3)
-  - [ ] Dùng `os.environ` hoặc `python-dotenv` để đọc env
-  - [ ] Tạo `@dataclass class IngestionConfig` với 4 fields trên
-  - [ ] Hàm `load() -> IngestionConfig`: đọc env, validate WSS_URL, raise `ConfigError` nếu thiếu
-  - [ ] `class ConfigError(Exception): pass`
+- [x] **Task 2 — Implement config.py** (AC1, AC2, AC3)
+  - [x] Dùng `os.environ` hoặc `python-dotenv` để đọc env
+  - [x] Tạo `@dataclass class IngestionConfig` với 4 fields trên
+  - [x] Hàm `load() -> IngestionConfig`: đọc env, validate WSS_URL, raise `ConfigError` nếu thiếu
+  - [x] `class ConfigError(Exception): pass`
 
-- [ ] **Task 3 — Tạo .env.example** (AC4)
-  - [ ] Ghi rõ từng biến: mục đích, ví dụ value, required/optional
+- [x] **Task 3 — Tạo .env.example** (AC4)
+  - [x] Ghi rõ từng biến: mục đích, ví dụ value, required/optional
 
-- [ ] **Task 4 — Viết unit tests** (AC6)
-  - [ ] `tests/unit/test_config.py`
-  - [ ] Dùng `monkeypatch.setenv` của pytest để set/unset biến env trong test
-  - [ ] Không cần `@pytest.mark.asyncio` (module này sync)
+- [x] **Task 4 — Viết unit tests** (AC6)
+  - [x] `tests/unit/test_config.py`
+  - [x] Dùng `monkeypatch.setenv` của pytest để set/unset biến env trong test
+  - [x] Không cần `@pytest.mark.asyncio` (module này sync)
 
 ## Dev Notes
 
@@ -154,9 +154,21 @@ pyproject.toml       ← UPDATE (thêm ingestion* vào include)
 
 ### Agent Model Used
 
+Claude Sonnet 4.6
+
 ### Debug Log References
 
+None — implementation straightforward, stdlib only.
+
 ### Completion Notes List
+
+- Tạo `ingestion/` package với `__init__.py` và `config.py` (stdlib only: os + dataclasses)
+- `IngestionConfig` dataclass với 4 fields (wss_url required, 3 optional)
+- `load()` validate WSS_URL và raise `ConfigError` nếu rỗng/thiếu
+- `pyproject.toml` đã thêm `"ingestion*"` vào include list
+- `.env.example` ghi rõ required/optional với dev/CI note
+- 7 unit tests — tất cả pass; 92/92 full suite — no regressions
+- Legacy story `1-1-web3-rpc-websocket-connection` đã được đổi sang `done` trong sprint-status.yaml
 
 ### File List
 
@@ -165,3 +177,4 @@ pyproject.toml       ← UPDATE (thêm ingestion* vào include)
 - `tests/unit/test_config.py` (NEW)
 - `.env.example` (NEW)
 - `pyproject.toml` (UPDATE — thêm `"ingestion*"` vào include)
+- `_bmad-output/sprint-status.yaml` (UPDATE — 1A-1 → review, 1-1-web3 → done)

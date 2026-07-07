@@ -1,11 +1,11 @@
 ---
-baseline_commit: aa9487a
+baseline_commit: 55c0cec9cf4d68710d43aee977f63ec0d16bb522
 type: build
 ---
 
 # Story 1A.2: AsyncWeb3 Client Wrapper
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -33,25 +33,25 @@ so that **mọi consumer (Track 1B, 1D, 1E) dùng cùng interface kết nối We
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Thêm web3 dependency** (AC5)
-  - [ ] Thêm `"web3>=6.11"` vào `[project] dependencies` trong `pyproject.toml`
-  - [ ] Chạy `pip install -e ".[dev]"` để verify không conflict
+- [x] **Task 1 — Thêm web3 dependency** (AC5)
+  - [x] Thêm `"web3>=6.11"` vào `[project] dependencies` trong `pyproject.toml`
+  - [x] Chạy `pip install -e ".[dev]"` để verify không conflict
 
-- [ ] **Task 2 — Implement EthereumClient** (AC1, AC2, AC3, AC4)
-  - [ ] Import `AsyncWeb3, WebSocketProvider` từ `web3`
-  - [ ] `__init__(self, cfg: IngestionConfig)` — lưu config
-  - [ ] `async connect(self) -> AsyncWeb3` — tạo provider với timeout=3s, trả về `self.w3`
-  - [ ] `async disconnect(self)` — gọi `await self.w3.provider.disconnect()`
-  - [ ] `__aenter__` / `__aexit__` cho context manager
-  - [ ] Wrap exception thành `ConnectionError` nếu web3 raise timeout/connection refused
+- [x] **Task 2 — Implement EthereumClient** (AC1, AC2, AC3, AC4)
+  - [x] Import `AsyncWeb3, WebSocketProvider` từ `web3`
+  - [x] `__init__(self, cfg: IngestionConfig)` — lưu config
+  - [x] `async connect(self) -> AsyncWeb3` — tạo provider với timeout=3s, trả về `self.w3`
+  - [x] `async disconnect(self)` — gọi `await self.w3.provider.disconnect()`
+  - [x] `__aenter__` / `__aexit__` cho context manager
+  - [x] Wrap exception thành `ConnectionError` nếu web3 raise timeout/connection refused
 
-- [ ] **Task 3 — Unit tests** (AC6)
-  - [ ] Mock `WebSocketProvider` bằng `unittest.mock.AsyncMock`
-  - [ ] Test timeout bằng cách mock raise `asyncio.TimeoutError`
+- [x] **Task 3 — Unit tests** (AC6)
+  - [x] Mock `WebSocketProvider` bằng `unittest.mock.AsyncMock`
+  - [x] Test timeout bằng cách mock raise `asyncio.TimeoutError`
 
-- [ ] **Task 4 — Integration test** (AC7)
-  - [ ] `pytest.mark.skipif` kiểm tra port 8546 có đang lắng nghe không
-  - [ ] Nếu mock WSS từ Story 0.5 đang chạy: connect và assert `client.w3.is_connected()`
+- [x] **Task 4 — Integration test** (AC7)
+  - [x] `pytest.mark.skipif` kiểm tra port 8546 có đang lắng nghe không
+  - [x] Nếu mock WSS từ Story 0.5 đang chạy: connect và assert `client.w3.is_connected()`
 
 ## Dev Notes
 
@@ -141,13 +141,34 @@ pyproject.toml       ← UPDATE (thêm web3>=6.11 vào dependencies)
 - Story 0.5: mock WSS tại `ws://localhost:8546` cho integration test
 - web3.py 6.x docs: https://web3py.readthedocs.io/en/stable/web3.providers.html#websocket-provider
 
+### Review Findings
+
+- [ ] [Review][Decision] — N/A (no decision-needed for this story)
+- [x] [Review][Patch] `disconnect()` swallows all exceptions silently without logging [ingestion/client.py:33-37] — fixed: added logger.debug with exc_info
+- [x] [Review][Patch] Double-connect: `connect()` called twice leaks first provider — no guard for `self.w3 is not None` [ingestion/client.py:17] — fixed: early return if self.w3 is not None
+- [x] [Review][Defer] Provider not cleaned up when `wait_for` times out (partial-connect leak) [ingestion/client.py:24] — deferred, PoC scope
+- [x] [Review][Defer] `web3>=6.11` but 7.16.0 installed — import path already broke once, no upper bound pin [pyproject.toml] — deferred, pre-existing
+
 ## Dev Agent Record
 
 ### Agent Model Used
 
+Claude Sonnet 4.6
+
 ### Debug Log References
 
+- web3 7.16.0 installed (newer than spec's 6.11 minimum); import path changed from `web3.providers.websocket` to `web3.providers` — fixed in client.py.
+
 ### Completion Notes List
+
+- `ingestion/client.py` tạo mới với `EthereumClient` dataclass dùng web3.py 7.x API
+- Import path thực tế: `from web3.providers import WebSocketProvider` (không phải `web3.providers.websocket`)
+- `asyncio.wait_for(connect(), timeout=3.0)` wrap timeout + ConnectionRefusedError + OSError → `ConnectionError`
+- `disconnect()` dùng try/except để swallow provider exceptions
+- Context manager `__aenter__`/`__aexit__` hoạt động đúng
+- 10 unit tests (mock WebSocketProvider bằng AsyncMock): tất cả pass
+- 1 integration test (skipif port 8546 chưa mở): correctly skipped
+- Full suite: 102 passed, 1 skipped — no regressions
 
 ### File List
 
