@@ -5,7 +5,7 @@ type: build
 
 # Story 1A.5: Heartbeat & Metrics
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -32,23 +32,23 @@ so that **on-call engineer phát hiện luồng ingestion bị đứng mà khôn
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Thêm prometheus-client dependency** (AC5)
-  - [ ] Thêm `"prometheus-client>=0.19"` vào `[project] dependencies` trong `pyproject.toml`
-  - [ ] Verify `from prometheus_client import Gauge, start_http_server` import được
+- [x] **Task 1 — Thêm prometheus-client dependency** (AC5)
+  - [x] Thêm `"prometheus-client>=0.19"` vào `[project] dependencies` trong `pyproject.toml`
+  - [x] Verify `from prometheus_client import Gauge, start_http_server` import được (upgraded installed 0.14.1 → 0.25.0)
 
-- [ ] **Task 2 — Implement metrics.py** (AC1, AC2, AC3)
-  - [ ] Tạo `Gauge("ingestion_ws_last_message_seconds", "Seconds since last WS message")`
-  - [ ] `record_message()`: gọi `gauge.set(time.time() - _last_ts)` và update `_last_ts = time.time()`
-  - [ ] `start_stall_watchdog(threshold_s=15)`: asyncio background task loop 5s check
-  - [ ] Log dạng JSON structured với `logging`
+- [x] **Task 2 — Implement metrics.py** (AC1, AC2, AC3)
+  - [x] Tạo `Gauge("ingestion_ws_last_message_seconds", "Seconds elapsed since the last WebSocket message was received")`
+  - [x] `record_message()`: reset `_last_message_time = time.time()` và `gauge.set(0)`
+  - [x] `start_stall_watchdog(threshold_s=15)`: asyncio background task loop 5s check (interval configurable for tests)
+  - [x] Log dạng JSON structured với `logging` (`{"event":"stream_stalled",...}`)
 
-- [ ] **Task 3 — /metrics endpoint** (AC4)
-  - [ ] `start_metrics_server(port=9090)` gọi `prometheus_client.start_http_server(port)`
-  - [ ] Note: Epic 5 (FastAPI) sẽ integrate endpoint này sau — PoC standalone là đủ
+- [x] **Task 3 — /metrics endpoint** (AC4)
+  - [x] `start_metrics_server(port=9090)` gọi `prometheus_client.start_http_server(port)`; trả về `(server, thread)` để shutdown
+  - [x] Note: Epic 5 (FastAPI) sẽ integrate endpoint này sau — PoC standalone là đủ
 
-- [ ] **Task 4 — Unit tests** (AC6)
-  - [ ] Mock `time.time()` để control timestamp
-  - [ ] Test watchdog bằng `asyncio.sleep(0)` để advance event loop
+- [x] **Task 4 — Unit tests** (AC6)
+  - [x] Control timestamp bằng `_Clock` monkeypatch lên `metrics.time.time`
+  - [x] Test watchdog task (interval nhỏ + cancel) + `_check_stall` deterministic; thêm test /metrics endpoint (AC4)
 
 ## Dev Notes
 
@@ -152,12 +152,69 @@ pyproject.toml       ← UPDATE (thêm prometheus-client>=0.19 vào dependencies
 
 ### Agent Model Used
 
+claude-opus-4-6 (BMad dev-story workflow)
+
 ### Debug Log References
 
+- Metrics unit tests: `pytest tests/unit/test_metrics.py` → 8 passed
+- Full suite: `pytest` → 127 passed, 1 skipped (external :8546 connect test), 0 regressions
+- Endpoint smoke: `GET /metrics` on a free port returns `ingestion_ws_last_message_seconds 0.0`
+
 ### Completion Notes List
+
+- **prometheus-client version:** Env had 0.14.1 (< AC5's `>=0.19`). Added `prometheus-client>=0.19`
+  to `pyproject.toml` and upgraded the installed package to **0.25.0** so the environment honestly
+  satisfies the declared floor. All APIs used (`Gauge`, `start_http_server`, `REGISTRY`) are stable.
+- **Design for testability:** Extracted `_check_stall(threshold_s)` (pure: refreshes gauge + logs the
+  structured WARNING, returns elapsed) out of the 5s loop so AC3 stall detection is tested
+  deterministically with a controllable clock — no real sleeping. `start_stall_watchdog` keeps the
+  AC-specified `threshold_s=15` default and adds an optional `interval_s` (default 5.0) so the watchdog
+  task can be exercised quickly in tests.
+- **Gauge semantics (AC2):** `record_message()` sets the gauge to 0 on each message; the watchdog sets
+  it to the elapsed seconds every interval, so a Prometheus scrape sees the value climb while stalled.
+- **/metrics endpoint (AC4):** `start_metrics_server(port=9090)` wraps `start_http_server` and returns
+  the `(WSGIServer, thread)` pair (prometheus-client 0.18+) so the server is shutdownable — used by the
+  endpoint test and available for the Epic 5 / pipeline (1E.1) lifecycle. Epic 5 will later replace this
+  standalone server with a FastAPI `/metrics` route via `generate_latest()`.
+- **Global gauge registration:** `_GAUGE` registers once in the default `REGISTRY` at import; no
+  duplicate-timeseries issue (single import) and the full suite shows no cross-test interference.
+- **AC coverage:** AC1/AC2 (module + gauge), AC3 (stall watchdog + WARNING), AC4 (endpoint), AC5
+  (dependency) all satisfied; AC6 unit tests cover record_message, stall/no-stall, metric name,
+  watchdog task, and the endpoint.
 
 ### File List
 
 - `ingestion/metrics.py` (NEW)
 - `tests/unit/test_metrics.py` (NEW)
-- `pyproject.toml` (UPDATE — thêm `prometheus-client>=0.19` vào dependencies)
+- `pyproject.toml` (MODIFIED — added `prometheus-client>=0.19` to dependencies)
+
+## Change Log
+
+- 2026-07-08: Implemented `ingestion/metrics.py` (gauge `ingestion_ws_last_message_seconds`,
+  `record_message`, stall watchdog, `/metrics` server); added unit tests; declared and upgraded
+  `prometheus-client>=0.19`. Story 1A.5 → review.
+- 2026-07-08: Code review — applied 2 patches (`/metrics` bind `127.0.0.1` default, watchdog clock
+  reset on start) + 1 regression test. 130 passed. Story 1A.5 → done.
+
+## Review Findings
+
+Code review (2026-07-08, adversarial 3-layer: Blind Hunter + Edge Case Hunter + Acceptance Auditor).
+
+### Patch (resolved 2026-07-08)
+
+- [x] [Review][Patch] `start_metrics_server` default `addr="0.0.0.0"` exposes /metrics on all interfaces; AC4 says `localhost:9090` — default to `127.0.0.1`, keep addr as opt-in [ingestion/metrics.py] — FIXED
+- [x] [Review][Patch] `_last_message_time` seeded at import time → the watchdog can emit a false `stream_stalled` before the first message; reset the clock when `start_stall_watchdog` starts [ingestion/metrics.py] — FIXED + regression test `test_watchdog_reset_prevents_startup_false_stall`
+
+### Deferred
+
+- [x] [Review][Defer] Watchdog `asyncio.Task` lifecycle/cancellation is caller responsibility — wire cancel-on-shutdown in 1E.1 [ingestion/metrics.py:~76]
+- [x] [Review][Defer] Module-level `Gauge` registration would raise `ValueError: Duplicated timeseries` on re-import/reload — add a registry guard if/when needed [ingestion/metrics.py:~24]
+- [x] [Review][Defer] `start_metrics_server`/`start_stall_watchdog` are not wired into any running process yet — 1E.1 pipeline orchestrator will start them [ingestion/metrics.py]
+
+### Dismissed (false positives / over-defensive / spec-conformant)
+
+- `record_message()` sets gauge to `0.0` — this is the AC2/spec pattern (reset on message, watchdog climbs the value each interval).
+- `_last_message_time` thread-safety — single asyncio loop + CPython GIL; prometheus-client locks its own value; over-cautious.
+- `_check_stall` uses `elapsed > threshold_s` — matches AC3 wording "stall > 15s".
+- `start_stall_watchdog` requires a running loop / `start_metrics_server` may raise `OSError` on port-in-use — standard asyncio/socket semantics; caller responsibility.
+- AC1 extra `interval_s` param, AC3 extra `threshold_s` log key, AC6 test-approach — additive/stronger; intent satisfied.

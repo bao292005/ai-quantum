@@ -1,5 +1,5 @@
 # generated: 2026-07-03T16:15:00Z
-# last_updated: 2026-07-06T11:00:00Z
+# last_updated: 2026-07-09T00:00:00Z
 # project: QuantumRadar
 # project_key: NOKEY
 # tracking_system: file-system
@@ -12,7 +12,7 @@
 # Story Status: backlog | ready-for-dev | in-progress | review | done
 
 generated: 2026-07-03T16:15:00Z
-last_updated: 2026-07-06T11:00:00Z
+last_updated: 2026-07-09T00:00:00Z
 project: QuantumRadar
 project_key: NOKEY
 tracking_system: file-system
@@ -26,6 +26,7 @@ development_status:
   0-3-fragility-payload-schema: done
   0-4-historical-backtest-fixtures: done
   0-5-mock-websocket-server: done
+  0-6-mock-wss-real-abi-logs: done   # prereq for 1E.1 realtime (mock logs must be ABI-decodable by Track 1B)
   epic-0-retrospective: optional
 
   # ---------- Epic 1: Data Ingestion (6 tracks: 1R research + 1A-1E) ----------
@@ -33,33 +34,33 @@ development_status:
   # Track 1R - Data Sourcing & Ground Truth (research, non-code)
   1R-1-data-source-assessment: ready-for-dev    # P1
   1R-2-schema-abi-reconciliation: ready-for-dev  # P0 - blocks 1B decoders
-  1R-3-ground-truth-labeling: ready-for-dev     # P1 - blocks Epic 4 verify
+  1R-3-ground-truth-labeling: review             # P1 - blocks Epic 4 verify
   # Track 1A - Realtime WebSocket
   1A-1-env-secrets-loader: done
   1A-2-asyncweb3-client-wrapper: done
   1A-3-exponential-backoff-reconnector: done
-  1A-4-newheads-subscription: ready-for-dev
-  1A-5-heartbeat-metrics: ready-for-dev
+  1A-4-newheads-subscription: done
+  1A-5-heartbeat-metrics: done
   # Legacy story mapping: 1-1-web3-rpc-websocket-connection.md covers 1A.1-1A.4
   1-1-web3-rpc-websocket-connection: done  # retired — superseded by 1A.1-1A.4
   # Track 1B - Event Decoding
-  1B-1-uniswap-v3-event-decoder: backlog
-  1B-2-aave-v3-event-decoder: backlog
-  1B-3-contract-address-whitelist: backlog
-  1B-4-event-router-normalizer: backlog
+  1B-1-uniswap-v3-event-decoder: done
+  1B-2-aave-v3-event-decoder: done
+  1B-3-contract-address-whitelist: done
+  1B-4-event-router-normalizer: done
   # Track 1C - Ring Buffer
-  1C-1-ring-buffer-interface: backlog
-  1C-2-deque-ring-buffer: backlog
-  1C-3-numpy-static-array-variant: backlog
-  1C-4-asyncio-safe-wrapper: backlog
+  1C-1-ring-buffer-interface: done
+  1C-2-deque-ring-buffer: done
+  1C-3-numpy-static-array-variant: done
+  1C-4-asyncio-safe-wrapper: done
   # Track 1D - CSV Historical
-  1D-1-csv-schema-mapping: backlog
-  1D-2-csv-streamer: backlog
-  1D-3-backtest-replay-driver: backlog
+  1D-1-csv-schema-mapping: done
+  1D-2-csv-streamer: done
+  1D-3-backtest-replay-driver: done
   # Track 1E - Integration
-  1E-1-pipeline-orchestrator: backlog
-  1E-2-etherscan-reconciliation-tool: backlog
-  1E-3-data-quality-profiling-report: backlog
+  1E-1-pipeline-orchestrator: done
+  1E-2-etherscan-reconciliation-tool: done
+  1E-3-data-quality-profiling-report: done
   epic-1-retrospective: optional
 
   # ---------- Epic 2: Tensor Graph Modeling (4 tracks: 2R research + 2A-2C) ----------

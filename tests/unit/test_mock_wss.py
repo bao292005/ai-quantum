@@ -122,8 +122,13 @@ def test_build_raw_log_shape():
     }
     log = build_raw_log(row)
     assert log["address"] == row["pool_address"]
-    assert log["topics"] and log["topics"][0].startswith("0x")
-    assert log["data"].startswith("0x") and len(log["data"]) == 2 + 128  # two 32-byte words
+    # Real ABI: swap topics = [topic0, sender, recipient]; data = 5 32-byte words
+    # (int256, int256, uint160, uint128, int24).
+    assert log["topics"][0] == (
+        "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67"
+    )
+    assert len(log["topics"]) == 3
+    assert log["data"].startswith("0x") and len(log["data"]) == 2 + 5 * 64
     assert log["blockNumber"] == hex(14_740_000)
     assert log["logIndex"] == hex(7)
     assert log["removed"] is False

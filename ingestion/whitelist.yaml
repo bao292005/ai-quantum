@@ -1,0 +1,32 @@
+# Contract address whitelist (Story 1B.3).
+# Format: contract_address: {protocol, token0, token1}
+# All addresses lowercase. For Aave V3 (single contract, multi-reserve),
+# token0/token1 = zero address — AaveV3Decoder extracts the real reserve /
+# collateral / debt addresses from the event topics.
+
+# --- Uniswap V3 Pools ---
+"0x88e6a0c2ddd26feeb64f039a2c41296fcb3f5640":
+  protocol: uniswap_v3
+  token0: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"  # USDC
+  token1: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"  # WETH
+
+"0x4e68ccd3e89f51c3074ca5072bbac773960dfa36":
+  protocol: uniswap_v3
+  token0: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"  # WETH
+  token1: "0xdac17f958d2ee523a2206206994597c13d831ec7"  # USDT
+
+# --- Aave V3 Pool (handles all reserves) ---
+"0x87870bca3f3fd6335c3f4ce8392d69350b4fa4e2":
+  protocol: aave_v3
+  token0: "0x0000000000000000000000000000000000000000"
+  token1: "0x0000000000000000000000000000000000000000"
+
+# --- Aave V2 Pool (LUNA/FTX backtest fixtures) ---
+# Aave V3 was not deployed until 2023-01-27, so the LUNA (2022-05) / FTX (2022-11)
+# fixtures emit from the Aave V2 Pool. Whitelisted as aave_v3 so the router
+# dispatches to AaveV3Decoder — the mock (Story 0.6) emits normalized V3 topic0s,
+# which the decoder matches regardless of the original V2 source.
+"0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9":
+  protocol: aave_v3
+  token0: "0x0000000000000000000000000000000000000000"
+  token1: "0x0000000000000000000000000000000000000000"

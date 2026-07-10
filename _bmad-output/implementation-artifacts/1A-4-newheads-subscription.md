@@ -5,7 +5,7 @@ type: build
 
 # Story 1A.4: newHeads Subscription
 
-Status: ready-for-dev
+Status: done
 
 ## Story
 
@@ -34,20 +34,20 @@ so that **downstream filter (Track 1B, 1C) tiêu thụ từng block header mà k
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Implement stream_new_heads** (AC1, AC2, AC3, AC4)
-  - [ ] Dùng `await client.w3.eth.subscribe("newHeads")` — API của web3.py 6.x
-  - [ ] Loop `async for header in subscription:` → yield header dict
-  - [ ] Wrap trong `try/finally` để cleanup khi cancelled
-  - [ ] Convert hex values nếu cần (web3.py 6.x trả về `AttributeDict` với Python types)
+- [x] **Task 1 — Implement stream_new_heads** (AC1, AC2, AC3, AC4)
+  - [x] `subscription_id = await client.w3.eth.subscribe("newHeads")` — web3.py **7.x** API (returns a HexStr id, NOT an iterator)
+  - [x] Loop `async for message in client.w3.socket.process_subscriptions():` → `header = message["result"]` → yield header dict
+  - [x] Wrap trong `try/finally` (unsubscribe) để cleanup khi cancelled / break / aclose
+  - [x] Convert `HexBytes` hash/parentHash → `0x`-hex str; `number`/`timestamp` đã là `int`
 
-- [ ] **Task 2 — Integration test** (AC5)
-  - [ ] Check port 8546 trước, skipif nếu không có
-  - [ ] Connect EthereumClient → call stream_new_heads → collect N headers
-  - [ ] Assert count ≥ 5 và shape đúng
+- [x] **Task 2 — Integration test** (AC5)
+  - [x] Self-host `MockWssServer` per test (repo Story 0.5 convention) thay vì phụ thuộc external :8546
+  - [x] Connect EthereumClient → call stream_new_heads → collect N headers
+  - [x] Assert count ≥ 5 và shape đúng, trong 10s ở speed=asap
 
-- [ ] **Task 3 — Unit test** (AC6)
-  - [ ] Mock `AsyncWeb3` và subscription object
-  - [ ] Test cancel bằng `asyncio.Task.cancel()`
+- [x] **Task 3 — Unit test** (AC6)
+  - [x] Mock `w3.eth.subscribe` + `w3.socket.process_subscriptions` (async iterator giả)
+  - [x] Test cancel bằng `asyncio.Task.cancel()`, aclose, và unsubscribe-error swallow
 
 ## Dev Notes
 
@@ -186,12 +186,78 @@ tests/
 
 ### Agent Model Used
 
+claude-opus-4-6 (BMad dev-story workflow)
+
 ### Debug Log References
 
+- Unit tests: `pytest tests/unit/test_streams.py` → 7 passed
+- Integration tests: `pytest tests/integration/test_streams.py` → 2 passed (~0.4s each)
+- Full suite: `pytest` → 119 passed, 1 skipped (external :8546 connect test), 0 regressions
+
 ### Completion Notes List
+
+- **web3.py version drift (6.x → 7.x):** Story Dev Notes assume the v6 subscription API
+  (`subscription = await w3.eth.subscribe("newHeads"); async for header in subscription`).
+  The installed runtime is **web3 7.16.0**, where `eth.subscribe(...)` returns a subscription
+  **id (HexStr)** and messages are consumed from the shared socket via
+  `w3.socket.process_subscriptions()`, which yields `{"subscription": id, "result": <BlockHeader>}`.
+  Implemented against the verified v7 API. Empirically confirmed against the mock WSS that
+  `result.number`/`result.timestamp` arrive as `int` and `result.hash`/`result.parentHash` as
+  `HexBytes` (hexbytes 1.3.1, whose `.hex()` has **no** `0x` prefix — so `_to_hex` prepends `0x`).
+- **Pre-existing bug fixed in `ingestion/client.py` (Story 1A.2):** `WebSocketProvider` was
+  constructed with `websocket_timeout=` — a valid kwarg in web3 6.x but **removed in 7.x**, raising
+  `TypeError: ... unexpected keyword argument 'websocket_timeout'` on every real connection. This was
+  never caught because the only test exercising a live connect (`test_client_connect.py`) is skipped
+  unless an external server runs on :8546. Removed the kwarg; the connect timeout is still enforced by
+  the existing `asyncio.wait_for(w3.provider.connect(), timeout=_CONNECT_TIMEOUT)` wrapper. This
+  unblocks AC5 and repairs live connects for the whole 1A track.
+- **Integration test design:** Follows the repo's Story 0.5 convention (self-hosted `MockWssServer`
+  per test on an ephemeral port) instead of the fragile external-:8546 skipif, so AC5 runs in CI. The
+  fixture is trimmed to the first ~10 blocks: at `speed=asap` an unbounded luna replay (26,540 events)
+  floods web3's internal subscription queue faster than a 5-header consumer drains it (`QueueFull`),
+  which also stalls a clean `unsubscribe`. A small bounded replay keeps subscribe/consume/teardown
+  deterministic and fast (~0.4s/test) while still delivering ≥5 headers at asap.
+- **AC coverage:** AC1–AC4 via `ingestion/streams.py` + unit tests (shape, ordering, subscribe call,
+  cleanup on exhaustion/aclose/cancel, unsubscribe-error swallow); AC5 via integration tests;
+  AC6 via unit tests.
 
 ### File List
 
 - `ingestion/streams.py` (NEW)
 - `tests/unit/test_streams.py` (NEW)
 - `tests/integration/test_streams.py` (NEW)
+- `ingestion/client.py` (MODIFIED — removed web3 6.x-only `websocket_timeout` kwarg)
+
+## Change Log
+
+- 2026-07-08: Implemented `stream_new_heads` async generator against web3.py 7.x subscription API;
+  added unit + integration tests; fixed `websocket_timeout` regression in `ingestion/client.py`.
+  Story 1A.4 → review.
+- 2026-07-08: Code review — applied 4 patches (subscription_id filter, not-connected guard,
+  `web3>=7.0` floor, free-port integration tests) + 2 new tests. 130 passed. Story 1A.4 → done.
+
+## Review Findings
+
+Code review (2026-07-08, adversarial 3-layer: Blind Hunter + Edge Case Hunter + Acceptance Auditor).
+
+### Patch (resolved 2026-07-08)
+
+- [x] [Review][Patch] Filter `process_subscriptions()` messages by `subscription_id` — a shared socket iterator yields ALL subscriptions; a future logs sub (Track 1B) on the same client would be mis-yielded as a block header [ingestion/streams.py] — FIXED + test `test_ignores_messages_from_other_subscriptions`
+- [x] [Review][Patch] Guard `client.w3 is None` with a clear error instead of a cryptic `AttributeError` when the caller forgot to connect [ingestion/streams.py] — FIXED + test `test_raises_when_client_not_connected`
+- [x] [Review][Patch] Bump dependency floor to `web3>=7.0` — code hard-requires the 7.x `w3.socket.process_subscriptions()` API; a fresh install resolving 6.x would silently break [pyproject.toml] — FIXED
+- [x] [Review][Patch] Integration test uses fixed ports 8621/8622 → collision under `pytest -n` / TIME_WAIT; reuse the `_free_port()` pattern already in test_metrics.py [tests/integration/test_streams.py] — FIXED
+
+### Deferred
+
+- [x] [Review][Defer] Reorg/duplicate block numbers are yielded as-is — dedup is Track 1B/1C responsibility; document the contract [ingestion/streams.py]
+- [x] [Review][Defer] `running_server` uses a fixed 0.3s readiness sleep (repo convention) — replace with a bind-readiness event later [tests/integration/test_streams.py:~50]
+- [x] [Review][Defer] `_first_n_blocks` returns fewer than n for tiny fixtures → `_collect_heads(5)` would time out; add an assert guard [tests/integration/test_streams.py:~30]
+- [x] [Review][Defer] Fixture missing in CI → `FileNotFoundError` instead of a clean skip [tests/integration/test_streams.py]
+
+### Dismissed (false positives / over-defensive / spec-conformant)
+
+- Reviewer claimed integration test omits `parentHash` assertion — FALSE: it is asserted (test_streams.py, `_collect_heads` loop).
+- Reviewer claimed mock hex-string `number`/`timestamp` cause a TypeError — FALSE: web3 7.x middleware normalizes them to `int` (verified empirically; integration tests pass).
+- `message["result"]` / `header["number"]`/`["timestamp"]` KeyError — web3 guarantees a formatted BlockHeader for a filtered newHeads subscription; over-defensive.
+- `_to_hex(None)`/`_to_hex(b"")`/bare-str branch — cannot occur for real headers; over-defensive.
+- AC6 "mock returns async iterator" & AC5 ":8546 skipif" wording divergences — intent satisfied (web3 7.x API + self-hosted mock is an improvement).

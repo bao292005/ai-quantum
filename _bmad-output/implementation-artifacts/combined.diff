@@ -1,0 +1,548 @@
+diff --git a/ingestion/client.py b/ingestion/client.py
+index adeba4a..35a77a1 100644
+--- a/ingestion/client.py
++++ b/ingestion/client.py
+@@ -20,10 +20,7 @@ class EthereumClient:
+     async def connect(self) -> AsyncWeb3:
+         if self.w3 is not None:
+             return self.w3
+-        provider = WebSocketProvider(
+-            self.cfg.wss_url,
+-            websocket_timeout=_CONNECT_TIMEOUT,
+-        )
++        provider = WebSocketProvider(self.cfg.wss_url)
+         w3 = AsyncWeb3(provider)
+         try:
+             await asyncio.wait_for(w3.provider.connect(), timeout=_CONNECT_TIMEOUT)
+diff --git a/pyproject.toml b/pyproject.toml
+index 868175a..e195e55 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -15,6 +15,7 @@ dependencies = [
+     "websockets>=12.0",
+     "aiohttp>=3.9.0",
+     "web3>=6.11",
++    "prometheus-client>=0.19",
+ ]
+ 
+ [project.optional-dependencies]
+diff --git a/ingestion/streams.py b/ingestion/streams.py
+new file mode 100644
+index 0000000..435b2c6
+--- /dev/null
++++ b/ingestion/streams.py
+@@ -0,0 +1,54 @@
++"""Block-header streaming over the WebSocket JSON-RPC subscription (Story 1A.4).
++
++``stream_new_heads`` wraps web3.py's ``newHeads`` subscription behind a plain
++async generator so downstream consumers (Track 1B decoders, Track 1C ring
++buffer) receive normalized block-header dicts without knowing any WebSocket
++internals.
++
++web3.py 7.x subscription model (verified against 7.16.0): ``eth.subscribe``
++returns a subscription id, and messages are consumed from the shared socket via
++``w3.socket.process_subscriptions()``, which yields
++``{"subscription": <id>, "result": <BlockHeader>}``. The header's ``number`` and
++``timestamp`` arrive as ``int`` and ``hash``/``parentHash`` as ``HexBytes``.
++"""
++
++from __future__ import annotations
++
++from typing import AsyncGenerator
++
++from ingestion.client import EthereumClient
++
++
++def _to_hex(value: object) -> str:
++    """Normalize a ``HexBytes``/``bytes`` hash to a ``0x``-prefixed string.
++
++    ``HexBytes.hex()`` (hexbytes 1.x) returns no ``0x`` prefix, so prepend it.
++    """
++    if isinstance(value, (bytes, bytearray)):
++        return "0x" + bytes(value).hex()
++    return "" if value is None else str(value)
++
++
++async def stream_new_heads(client: EthereumClient) -> AsyncGenerator[dict, None]:
++    """Subscribe to ``newHeads`` and yield normalized block-header dicts.
++
++    Each yielded dict contains ``number`` (int), ``hash`` (str), ``timestamp``
++    (int) and ``parentHash`` (str). The subscription is torn down in ``finally``
++    so a consumer that breaks or cancels leaves the socket clean (AC4).
++    """
++    w3 = client.w3
++    subscription_id = await w3.eth.subscribe("newHeads")
++    try:
++        async for message in w3.socket.process_subscriptions():
++            header = message["result"]
++            yield {
++                "number": header["number"],
++                "hash": _to_hex(header.get("hash")),
++                "timestamp": header["timestamp"],
++                "parentHash": _to_hex(header.get("parentHash")),
++            }
++    finally:
++        try:
++            await w3.eth.unsubscribe(subscription_id)
++        except Exception:
++            pass  # best-effort: socket may already be gone on shutdown
+diff --git a/ingestion/metrics.py b/ingestion/metrics.py
+new file mode 100644
+index 0000000..77b1909
+--- /dev/null
++++ b/ingestion/metrics.py
+@@ -0,0 +1,99 @@
++"""Ingestion heartbeat + stall metrics (Story 1A.5).
++
++Exposes a Prometheus gauge, ``ingestion_ws_last_message_seconds``, tracking the
++number of seconds since the last WebSocket message was received. Consumers call
++:func:`record_message` on every block header (Story 1A.4's ``stream_new_heads``);
++:func:`start_stall_watchdog` runs a background coroutine that refreshes the gauge
++and logs a structured WARNING when the stream stalls past a threshold.
++"""
++
++from __future__ import annotations
++
++import asyncio
++import json
++import logging
++import threading
++import time
++from wsgiref.simple_server import WSGIServer
++
++from prometheus_client import Gauge, start_http_server
++
++logger = logging.getLogger(__name__)
++
++METRIC_NAME = "ingestion_ws_last_message_seconds"
++_DEFAULT_THRESHOLD_S = 15.0
++_DEFAULT_INTERVAL_S = 5.0
++
++_GAUGE = Gauge(
++    METRIC_NAME,
++    "Seconds elapsed since the last WebSocket message was received",
++)
++
++# Module-global heartbeat timestamp. Seeded at import so the gauge starts from a
++# defined point rather than an unbounded "never seen a message" value.
++_last_message_time: float = time.time()
++
++
++def record_message() -> None:
++    """Mark that a message just arrived: reset the heartbeat and the gauge to 0."""
++    global _last_message_time
++    _last_message_time = time.time()
++    _GAUGE.set(0.0)
++
++
++def seconds_since_last_message() -> float:
++    """Seconds elapsed since the last :func:`record_message` call."""
++    return time.time() - _last_message_time
++
++
++def _check_stall(threshold_s: float) -> float:
++    """Refresh the gauge and log a WARNING if the stream has stalled.
++
++    Returns the elapsed seconds since the last message so callers/tests can
++    assert on it without reaching into module globals.
++    """
++    elapsed = seconds_since_last_message()
++    _GAUGE.set(elapsed)
++    if elapsed > threshold_s:
++        logger.warning(
++            json.dumps(
++                {
++                    "event": "stream_stalled",
++                    "seconds_since_last": round(elapsed, 1),
++                    "threshold_s": threshold_s,
++                }
++            )
++        )
++    return elapsed
++
++
++async def _watchdog_loop(threshold_s: float, interval_s: float) -> None:
++    while True:
++        await asyncio.sleep(interval_s)
++        _check_stall(threshold_s)
++
++
++def start_stall_watchdog(
++    threshold_s: float = _DEFAULT_THRESHOLD_S,
++    interval_s: float = _DEFAULT_INTERVAL_S,
++) -> asyncio.Task:
++    """Start the background stall watchdog and return its :class:`asyncio.Task`.
++
++    Checks every ``interval_s`` seconds (default 5s) and warns when the stream
++    has been silent for more than ``threshold_s`` seconds (default 15s).
++    """
++    return asyncio.create_task(_watchdog_loop(threshold_s, interval_s))
++
++
++def start_metrics_server(
++    port: int = 9090, addr: str = "0.0.0.0"
++) -> tuple[WSGIServer, threading.Thread]:
++    """Serve Prometheus metrics over HTTP at ``/metrics`` on ``port``.
++
++    Returns the ``(server, thread)`` pair from ``prometheus_client`` so the
++    caller can shut the server down (used by tests and, later, the Epic 5 /
++    pipeline lifecycle).
++    """
++    server, thread = start_http_server(port, addr=addr)
++    logger.info(json.dumps({"event": "metrics_server_started", "port": port}))
++    return server, thread
+diff --git a/tests/unit/test_streams.py b/tests/unit/test_streams.py
+new file mode 100644
+index 0000000..35c5b42
+--- /dev/null
++++ b/tests/unit/test_streams.py
+@@ -0,0 +1,113 @@
++import asyncio
++from unittest.mock import AsyncMock, MagicMock
++
++import pytest
++from hexbytes import HexBytes
++
++from ingestion.streams import stream_new_heads
++
++
++def _header_msg(number: int, *, hash_byte: int = 0xAB, parent_byte: int = 0xCD) -> dict:
++    """Build a fake web3 v7 subscription message (shape: subscription + result)."""
++    return {
++        "subscription": "0xsubid",
++        "result": {
++            "number": number,
++            "hash": HexBytes(bytes([hash_byte]) * 32),
++            "timestamp": 1_651_857_000 + number,
++            "parentHash": HexBytes(bytes([parent_byte]) * 32),
++        },
++    }
++
++
++def _make_client(messages, *, block_after=False):
++    """MagicMock EthereumClient whose w3 emulates the v7 subscription socket API.
++
++    If ``block_after`` is True the async stream blocks forever after the last
++    message, so cancellation/aclose paths can be exercised deterministically.
++    """
++    client = MagicMock()
++    client.w3.eth.subscribe = AsyncMock(return_value="0xsubid")
++    client.w3.eth.unsubscribe = AsyncMock(return_value=True)
++
++    async def _stream():
++        for m in messages:
++            yield m
++        if block_after:
++            await asyncio.Event().wait()  # never resolves → simulate live socket
++
++    client.w3.socket.process_subscriptions = MagicMock(return_value=_stream())
++    return client
++
++
++class TestStreamNewHeadsShape:
++    async def test_yields_normalized_header_fields(self):
++        client = _make_client([_header_msg(100)])
++
++        out = [h async for h in stream_new_heads(client)]
++
++        assert len(out) == 1
++        h = out[0]
++        assert h["number"] == 100
++        assert isinstance(h["number"], int)
++        assert h["timestamp"] == 1_651_857_100
++        assert isinstance(h["timestamp"], int)
++        assert h["hash"] == "0x" + "ab" * 32
++        assert h["parentHash"] == "0x" + "cd" * 32
++
++    async def test_yields_every_message_in_order(self):
++        client = _make_client([_header_msg(n) for n in range(5)])
++
++        out = [h async for h in stream_new_heads(client)]
++
++        assert [h["number"] for h in out] == [0, 1, 2, 3, 4]
++
++    async def test_subscribes_to_new_heads(self):
++        client = _make_client([_header_msg(1)])
++
++        _ = [h async for h in stream_new_heads(client)]
++
++        client.w3.eth.subscribe.assert_awaited_once_with("newHeads")
++
++
++class TestStreamNewHeadsCleanup:
++    async def test_unsubscribe_called_on_normal_exhaustion(self):
++        client = _make_client([_header_msg(1)])
++
++        _ = [h async for h in stream_new_heads(client)]
++
++        client.w3.eth.unsubscribe.assert_awaited_once_with("0xsubid")
++
++    async def test_aclose_triggers_cleanup(self):
++        client = _make_client([_header_msg(1)], block_after=True)
++
++        agen = stream_new_heads(client)
++        first = await agen.__anext__()
++        assert first["number"] == 1
++        await agen.aclose()
++
++        client.w3.eth.unsubscribe.assert_awaited_once_with("0xsubid")
++
++    async def test_cancel_exits_cleanly_and_cleans_up(self):
++        client = _make_client([_header_msg(1)], block_after=True)
++        started = asyncio.Event()
++
++        async def consume():
++            async for _ in stream_new_heads(client):
++                started.set()
++
++        task = asyncio.create_task(consume())
++        await asyncio.wait_for(started.wait(), timeout=1.0)
++        task.cancel()
++        with pytest.raises(asyncio.CancelledError):
++            await task
++
++        client.w3.eth.unsubscribe.assert_awaited_once_with("0xsubid")
++
++    async def test_unsubscribe_error_is_swallowed(self):
++        client = _make_client([_header_msg(1)], block_after=True)
++        client.w3.eth.unsubscribe = AsyncMock(side_effect=RuntimeError("socket gone"))
++
++        agen = stream_new_heads(client)
++        await agen.__anext__()
++        await agen.aclose()  # must not raise despite unsubscribe failing
+diff --git a/tests/integration/test_streams.py b/tests/integration/test_streams.py
+new file mode 100644
+index 0000000..01faff1
+--- /dev/null
++++ b/tests/integration/test_streams.py
+@@ -0,0 +1,95 @@
++"""Integration tests for ``stream_new_heads`` (Story 1A.4, AC5).
++
++Spins up a real ``MockWssServer`` (Story 0.5) on an ephemeral port and drives it
++through the real ``EthereumClient`` + web3.py WebSocket subscription, proving the
++end-to-end contract: subscribe → receive >= 5 normalized block headers within
++10s at ``speed=asap``, each carrying the AC3 fields.
++
++Each test starts its own server because the mock replays a fixture exactly once
++per lifetime (lazy-started on the first subscription). The fixture is trimmed to
++the first few blocks: at ``asap`` an unbounded replay would flood web3's internal
++subscription queue faster than a 5-header consumer drains it, so a small, bounded
++replay keeps subscribe/consume/teardown fast and deterministic.
++"""
++
++from __future__ import annotations
++
++import asyncio
++from contextlib import asynccontextmanager
++
++from ingestion.client import EthereumClient
++from ingestion.config import IngestionConfig
++from ingestion.streams import stream_new_heads
++from tools.mock_wss.replay import load_events, parse_speed, resolve_scenario_file
++from tools.mock_wss.server import MockWssServer, ServerState
++
++HOST = "127.0.0.1"
++
++
++def _first_n_blocks(events: list[dict], n: int) -> list[dict]:
++    """Return the events belonging to the first ``n`` distinct blocks."""
++    out: list[dict] = []
++    seen: set[int] = set()
++    for e in events:
++        block = e["block_number"]
++        if block not in seen:
++            if len(seen) >= n:
++                break
++            seen.add(block)
++        out.append(e)
++    return out
++
++
++@asynccontextmanager
++async def running_server(
++    speed: str = "asap", scenario: str = "luna", port: int = 8621, blocks: int = 10
++):
++    """Start a mock WSS server replaying the first ``blocks`` blocks of a scenario."""
++    events = _first_n_blocks(load_events(resolve_scenario_file(scenario)), blocks)
++    server = MockWssServer(events, parse_speed(speed), state=ServerState())
++    task = asyncio.create_task(server.run(HOST, port))
++    await asyncio.sleep(0.3)  # let serve() bind before the client connects
++    try:
++        yield port
++    finally:
++        server.request_stop()
++        await asyncio.wait_for(task, timeout=5)
++
++
++async def _collect_heads(port: int, count: int) -> list[dict]:
++    cfg = IngestionConfig(wss_url=f"ws://{HOST}:{port}")
++    headers: list[dict] = []
++    async with EthereumClient(cfg) as client:
++        stream = stream_new_heads(client)
++        try:
++            async for head in stream:
++                headers.append(head)
++                if len(headers) >= count:
++                    break
++        finally:
++            # Tear the subscription down before disconnecting so the live
++            # socket read loop stops promptly (keeps teardown fast).
++            await stream.aclose()
++    return headers
++
++
++async def test_stream_new_heads_receives_blocks():
++    # AC5: subscribe → receive >= 5 block headers within 10s at speed=asap.
++    async with running_server(speed="asap", port=8621) as port:
++        headers = await asyncio.wait_for(_collect_heads(port, 5), timeout=10.0)
++
++    assert len(headers) >= 5
++    for h in headers:
++        # AC3 field presence + types after normalization.
++        assert isinstance(h["number"], int)
++        assert isinstance(h["hash"], str) and h["hash"].startswith("0x")
++        assert isinstance(h["timestamp"], int)
++        assert isinstance(h["parentHash"], str) and h["parentHash"].startswith("0x")
++
++
++async def test_block_numbers_are_monotonic():
++    async with running_server(speed="asap", port=8622) as port:
++        headers = await asyncio.wait_for(_collect_heads(port, 5), timeout=10.0)
++
++    numbers = [h["number"] for h in headers]
++    assert numbers == sorted(numbers)
+diff --git a/tests/unit/test_metrics.py b/tests/unit/test_metrics.py
+new file mode 100644
+index 0000000..21f63d8
+--- /dev/null
++++ b/tests/unit/test_metrics.py
+@@ -0,0 +1,129 @@
++import asyncio
++import logging
++import socket
++import urllib.request
++
++import pytest
++from prometheus_client import REGISTRY
++
++from ingestion import metrics
++
++
++def _free_port() -> int:
++    with socket.socket() as s:
++        s.bind(("127.0.0.1", 0))
++        return s.getsockname()[1]
++
++
++class _Clock:
++    """A controllable stand-in for ``time.time`` used to make elapsed-time
++    assertions deterministic without real sleeping."""
++
++    def __init__(self, t: float) -> None:
++        self.t = t
++
++    def __call__(self) -> float:
++        return self.t
++
++
++@pytest.fixture
++def clock(monkeypatch):
++    c = _Clock(1_000.0)
++    monkeypatch.setattr(metrics.time, "time", c)
++    return c
++
++
++def _gauge_value() -> float:
++    return REGISTRY.get_sample_value(metrics.METRIC_NAME)
++
++
++class TestRecordMessage:
++    def test_updates_timestamp_and_zeroes_gauge(self, clock):
++        clock.t = 1_234.5
++        metrics.record_message()
++
++        assert metrics._last_message_time == 1_234.5
++        assert _gauge_value() == 0.0
++
++    def test_seconds_since_last_message_tracks_elapsed(self, clock):
++        clock.t = 1_000.0
++        metrics.record_message()
++        clock.t = 1_007.0
++
++        assert metrics.seconds_since_last_message() == 7.0
++
++
++class TestStallDetection:
++    def test_warns_when_stalled_past_threshold(self, clock, caplog):
++        clock.t = 2_000.0
++        metrics.record_message()
++        clock.t = 2_020.0  # 20s of silence, threshold 15s
++
++        with caplog.at_level(logging.WARNING, logger=metrics.logger.name):
++            elapsed = metrics._check_stall(15.0)
++
++        assert elapsed == 20.0
++        assert _gauge_value() == 20.0
++        stalls = [r for r in caplog.records if "stream_stalled" in r.getMessage()]
++        assert len(stalls) == 1
++        assert '"seconds_since_last": 20.0' in stalls[0].getMessage()
++
++    def test_no_warning_when_fresh(self, clock, caplog):
++        clock.t = 3_000.0
++        metrics.record_message()
++        clock.t = 3_005.0  # only 5s, under threshold
++
++        with caplog.at_level(logging.WARNING, logger=metrics.logger.name):
++            elapsed = metrics._check_stall(15.0)
++
++        assert elapsed == 5.0
++        assert _gauge_value() == 5.0
++        assert not any("stream_stalled" in r.getMessage() for r in caplog.records)
++
++
++class TestMetricName:
++    def test_metric_name_is_exact(self):
++        assert metrics.METRIC_NAME == "ingestion_ws_last_message_seconds"
++        # Gauge is registered under that exact name in the default registry.
++        assert _gauge_value() is not None
++
++
++class TestWatchdogTask:
++    async def test_watchdog_detects_stall(self, clock, caplog):
++        clock.t = 4_000.0
++        metrics.record_message()
++        clock.t = 4_030.0  # stalled 30s
++
++        with caplog.at_level(logging.WARNING, logger=metrics.logger.name):
++            task = metrics.start_stall_watchdog(threshold_s=15.0, interval_s=0.01)
++            await asyncio.sleep(0.05)  # allow a few watchdog iterations
++            task.cancel()
++            with pytest.raises(asyncio.CancelledError):
++                await task
++
++        assert any("stream_stalled" in r.getMessage() for r in caplog.records)
++
++    async def test_watchdog_returns_task(self, clock):
++        task = metrics.start_stall_watchdog(threshold_s=15.0, interval_s=0.01)
++        assert isinstance(task, asyncio.Task)
++        task.cancel()
++        with pytest.raises(asyncio.CancelledError):
++            await task
++
++
++class TestMetricsServer:
++    def test_metrics_endpoint_serves_gauge(self):
++        # AC4: GET /metrics exposes the gauge in Prometheus text format.
++        port = _free_port()
++        server, thread = metrics.start_metrics_server(port=port, addr="127.0.0.1")
++        try:
++            metrics.record_message()
++            body = urllib.request.urlopen(
++                f"http://127.0.0.1:{port}/metrics", timeout=3
++            ).read().decode()
++        finally:
++            server.shutdown()
++            thread.join(timeout=3)
++
++        assert "ingestion_ws_last_message_seconds" in body
++        assert not thread.is_alive()

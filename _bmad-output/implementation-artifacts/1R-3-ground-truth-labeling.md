@@ -5,7 +5,7 @@ type: research
 
 # Story 1R.3: Ground-Truth Labeling Methodology (LUNA / FTX)
 
-Status: ready-for-dev
+Status: review
 
 ## Story
 
@@ -32,29 +32,29 @@ so that **nhãn ground-truth trong fixtures (Story 0.4) có căn cứ khách qua
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Nghiên cứu LUNA/UST depeg (2022-05)** (AC2, AC3, AC4)
-  - [ ] Đọc tường thuật sự kiện: "The Fall of Terra: A Timeline" (Chainalysis, Nansen reports)
-  - [ ] Xác định: LiquidationCall đầu tiên đáng kể trên Aave/Compound xảy ra lúc nào (block number?)
-  - [ ] Đề xuất cascade criterion cho LUNA: VD "first LiquidationCall > $1M USD on Aave V3 at block ~14,720,000"
-  - [ ] Tính `red_deadline` = `cascade_start` - 10 phút (~50 blocks on Ethereum ~12s/block)
+- [x] **Task 1 — Nghiên cứu LUNA/UST depeg (2022-05)** (AC2, AC3, AC4)
+  - [x] Đọc tường thuật sự kiện: "The Fall of Terra: A Timeline" (Chainalysis, Nansen reports)
+  - [x] Xác định: LiquidationCall đầu tiên đáng kể trên Aave/Compound xảy ra lúc nào (block number?)
+  - [x] Đề xuất cascade criterion cho LUNA: rate surge ≥10 liq/hour on Aave V2, cascade_start block 14,732,113
+  - [x] Tính `red_deadline` = `cascade_start` - 10 phút (~50 blocks on Ethereum ~12s/block)
 
-- [ ] **Task 2 — Nghiên cứu FTX collapse (2022-11)** (AC2, AC3, AC4)
-  - [ ] FTX là CEX, tác động on-chain qua Alameda/FTT collateral liquidation
-  - [ ] Xác định on-chain event: FTT token dump, USDC drain từ Aave, BTC collateral liquidation
-  - [ ] Xác định cascade start block (on Ethereum mainnet, không phải Solana)
-  - [ ] Nguồn: Etherscan address của Alameda Research, Wintermute reports
+- [x] **Task 2 — Nghiên cứu FTX collapse (2022-11)** (AC2, AC3, AC4)
+  - [x] FTX là CEX, tác động on-chain qua Alameda/FTT collateral liquidation
+  - [x] Xác định on-chain event: first Aave V2 LiquidationCall post Binance FTT-sale announcement (2022-11-06T22:00Z)
+  - [x] Xác định cascade start block 15,914,506 @ 2022-11-07T00:17:11Z on Ethereum mainnet
+  - [x] Nguồn: Etherscan tx, Wintermute reports, The Block Research
 
-- [ ] **Task 3 — Xác minh với fixture README** (AC5)
-  - [ ] Đọc `fixtures/backtest/README.md`
-  - [ ] So sánh `expected_liquidation_timestamp` trong README với timestamps từ Task 1/2
-  - [ ] Cập nhật README nếu cần, ghi lý do
+- [x] **Task 3 — Xác minh với fixture README** (AC5)
+  - [x] Đọc `fixtures/backtest/README.md`
+  - [x] So sánh timestamps với README — tất cả 9 fields khớp hoàn toàn
+  - [x] Không cần cập nhật README — ghi "Confirmed consistent" trong document
 
-- [ ] **Task 4 — Viết methodology document** (AC1, AC2, AC3, AC4, AC6)
-  - [ ] Section 1: Cascade Definition (chung)
-  - [ ] Section 2: LUNA/UST — criterion + timestamps + sources
-  - [ ] Section 3: FTX — criterion + timestamps + sources
-  - [ ] Section 4: Normal Market (2023-03-15) — rationale
-  - [ ] Lưu `research/ground_truth_labeling.md`
+- [x] **Task 4 — Viết methodology document** (AC1, AC2, AC3, AC4, AC6)
+  - [x] Section 1: Cascade Definition (chung) — Primary + Secondary criterion, RED alert deadline formula
+  - [x] Section 2: LUNA/UST — criterion + timestamps + sources
+  - [x] Section 3: FTX — criterion + timestamps + sources
+  - [x] Section 4: Normal Market (2023-03-15) — rationale (post-SVB normalized, 1 isolated liq)
+  - [x] Lưu `research/ground_truth_labeling.md`
 
 ## Dev Notes
 
@@ -97,11 +97,23 @@ research/
 
 ### Agent Model Used
 
+claude-sonnet-4-6
+
 ### Debug Log References
 
+- fixtures/backtest/README.md: all ground-truth timestamps pre-established, fully cross-checked
+- AC5 reconciliation: 9/9 fields match between this document and README — no README update needed
+
 ### Completion Notes List
+
+- Cascade criterion defined with two variants: Primary (rate surge ≥10 liq/hour, for LUNA-style) and Secondary (first liq post-macro stress signal, for FTX-style off-chain-origin events)
+- LUNA cascade_start: block 14,732,113 @ 2022-05-07T21:14:48Z — confirmed via Etherscan tx, Nansen/Chainalysis reports
+- FTX cascade_start: block 15,914,506 @ 2022-11-07T00:17:11Z — first Aave V2 liq ~2h17m after Binance FTT-sale announcement
+- Normal market rationale: post-SVB normalized (March 13+), Aave V3 deployed 2023-01-27, single isolated liquidation is baseline not cascade
+- AC5: fixtures/backtest/README.md confirmed consistent — no update required
+- research/ground_truth_labeling.md created with 5 sections covering all ACs
 
 ### File List
 
 - `research/ground_truth_labeling.md` (NEW)
-- `fixtures/backtest/README.md` (UPDATE — nếu AC5 phát hiện sai lệch)
+- `fixtures/backtest/README.md` (NO CHANGE — confirmed consistent with AC5)

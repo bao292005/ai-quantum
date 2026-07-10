@@ -21,6 +21,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Iterator
 
+from eth_abi import encode as abi_encode
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 # Fixtures are shipped in sdist/wheel builds (see MANIFEST.in) and resolve to the
 # repo tree for editable/dev installs. Deployments that relocate fixtures can set
@@ -35,14 +37,19 @@ SCENARIO_FILES: dict[str, str] = {
     "normal": "normal_2023_03_15.csv",
 }
 
-_UINT256_MASK = (1 << 256) - 1
+_ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+_ZERO_WORD = "0x" + "00" * 32
 
-# topic0 signatures per event_type (cosmetic — AC9 filters on address only, but
-# a realistic raw-log shape keeps downstream decoders honest).
+# Real mainnet topic0 per normalized event_type — MUST match the Track 1B decoder
+# constants (ingestion/decoders/*), so mock logs decode end-to-end. Borrow uses
+# the real uint8-interestRateMode variant.
 _EVENT_TOPIC0: dict[str, str] = {
     "swap": "0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67",
-    "borrow": "0xc6a898309e823ee50bac64e45ca8adba6690e99e7841c45d754e2a38e9019d9b",
-    "supply": "0xde6857219544bb5b7746f48ed30be6386fefc61b2f864cacf559893bf50fd951",
+    "mint": "0x7a53080ba414158be7ec69b987b5fb7d07dee101fe85488f0853ae16239d0bde",
+    "burn": "0x0c396cd989a39f4459b5fa1aed6a9a8dcdbc45908acfd67e028cd568da98982c",
+    "supply": "0x2b627736bca15cd5381dcf80b0bf11fd197d01a037c52b927a881a10fb73ba61",
+    "borrow": "0xb3d084820fb1a9decffb176436bd02558d15fac9b0ddfed8c465bc7359d7dce0",
+    "withdraw": "0x3115d1449a7b732c986cba18244e897a450f61e1bb8d589cd2e69e6c8924f9f7",
     "liquidation": "0xe413a321e8681d831f4dbccbca790d2952b56f977908e45be37335533e005286",
 }
 
@@ -195,24 +202,75 @@ def build_block_header(block_number: int, block_timestamp: str) -> dict:
     }
 
 
-def _to_word(value: int) -> str:
-    """Encode a (possibly negative) int as a 32-byte two's-complement hex word."""
-    return format(value & _UINT256_MASK, "064x")
+def _addr_topic(addr: str) -> str:
+    """Left-pad a 20-byte address into a 32-byte indexed-topic hex string."""
+    return "0x" + "00" * 12 + addr.lower().removeprefix("0x")
+
+
+def _encode_event(event_type: str, amount0: int, amount1: int, token0: str, token1: str):
+    """Return ``(topics_tail, data_bytes)`` for a normalized event.
+
+    ``topics_tail`` are the indexed topics AFTER topic0. Layouts mirror the real
+    Uniswap V3 / Aave V3 event ABIs exactly where the Track 1B decoders read
+    amounts and asset addresses; other positions are zero-filled placeholders.
+    """
+    if event_type == "swap":
+        tail = [_addr_topic(_ZERO_ADDRESS), _addr_topic(_ZERO_ADDRESS)]  # sender, recipient
+        data = abi_encode(["int256", "int256", "uint160", "uint128", "int24"], [amount0, amount1, 0, 0, 0])
+    elif event_type == "mint":
+        tail = [_addr_topic(_ZERO_ADDRESS), _ZERO_WORD, _ZERO_WORD]  # owner, tickLower, tickUpper
+        data = abi_encode(["address", "uint128", "uint256", "uint256"], [_ZERO_ADDRESS, 0, amount0, amount1])
+    elif event_type == "burn":
+        tail = [_addr_topic(_ZERO_ADDRESS), _ZERO_WORD, _ZERO_WORD]  # owner, tickLower, tickUpper
+        data = abi_encode(["uint128", "uint256", "uint256"], [0, amount0, amount1])
+    elif event_type == "supply":
+        tail = [_addr_topic(token0), _addr_topic(_ZERO_ADDRESS), _ZERO_WORD]  # reserve, onBehalfOf, refCode
+        data = abi_encode(["address", "uint256"], [_ZERO_ADDRESS, amount0])
+    elif event_type == "borrow":
+        tail = [_addr_topic(token0), _addr_topic(_ZERO_ADDRESS), _ZERO_WORD]  # reserve, onBehalfOf, refCode
+        data = abi_encode(["address", "uint256", "uint256", "uint256"], [_ZERO_ADDRESS, amount0, 0, 0])
+    elif event_type == "withdraw":
+        tail = [_addr_topic(token0), _addr_topic(_ZERO_ADDRESS), _addr_topic(_ZERO_ADDRESS)]  # reserve, user, to
+        data = abi_encode(["uint256"], [amount0])
+    elif event_type == "liquidation":
+        tail = [_addr_topic(token0), _addr_topic(token1), _addr_topic(_ZERO_ADDRESS)]  # collateral, debt, user
+        # decoder reads amount0=data[1] (collateral), amount1=data[0] (debtToCover)
+        data = abi_encode(["uint256", "uint256", "address", "bool"], [amount1, amount0, _ZERO_ADDRESS, False])
+    else:
+        tail = []
+        data = abi_encode(["int256", "int256"], [amount0, amount1])
+    return tail, data
 
 
 def build_raw_log(row: dict) -> dict:
-    """Build a raw-log ``result`` payload for a ``logs`` subscription (AC3).
+    """Build a real ABI-encoded raw-log ``result`` payload for a ``logs`` sub (AC3).
 
-    Reconstructs an eth-style log from the normalized fixture row: ``topics`` is
-    ``[topic0]`` for the event type, and ``data`` packs the two amounts as
-    32-byte words. Numeric fields are hex-encoded per the JSON-RPC convention.
+    Reconstructs an eth-style log from the normalized fixture row so the Track 1B
+    decoders round-trip it: ``topics`` carries topic0 + the event's indexed
+    fields (asset addresses for Aave), and ``data`` is the ABI-encoded
+    non-indexed tuple. Raises ``ValueError`` if an amount is non-numeric so the
+    replay loop's per-row guard can skip the bad row.
     """
-    topic0 = _EVENT_TOPIC0.get(row["event_type"], "0x" + "00" * 32)
-    data = "0x" + _to_word(int(row["amount0"])) + _to_word(int(row["amount1"]))
+    amount0, amount1 = int(row["amount0"]), int(row["amount1"])  # ValueError on bad row
+    event_type = row["event_type"]
+    topic0 = _EVENT_TOPIC0.get(event_type, "0x" + "00" * 32)
+    try:
+        tail, data = _encode_event(
+            event_type,
+            amount0,
+            amount1,
+            row.get("token0", _ZERO_ADDRESS),
+            row.get("token1", _ZERO_ADDRESS),
+        )
+    except Exception as exc:
+        # eth_abi raises its own EncodingError (e.g. ValueOutOfBounds) for a
+        # negative/overflow amount on a uint field. Re-raise as ValueError so the
+        # replay loop's per-row guard skips the row instead of dying.
+        raise ValueError(f"cannot ABI-encode {event_type} log: {exc}") from exc
     return {
         "address": row["pool_address"],
-        "topics": [topic0],
-        "data": data,
+        "topics": [topic0, *tail],
+        "data": "0x" + data.hex(),
         "blockNumber": hex(int(row["block_number"])),
         "blockHash": _block_hash(int(row["block_number"])),
         "transactionHash": row["tx_hash"],

@@ -20,10 +20,7 @@ class EthereumClient:
     async def connect(self) -> AsyncWeb3:
         if self.w3 is not None:
             return self.w3
-        provider = WebSocketProvider(
-            self.cfg.wss_url,
-            websocket_timeout=_CONNECT_TIMEOUT,
-        )
+        provider = WebSocketProvider(self.cfg.wss_url)
         w3 = AsyncWeb3(provider)
         try:
             await asyncio.wait_for(w3.provider.connect(), timeout=_CONNECT_TIMEOUT)
