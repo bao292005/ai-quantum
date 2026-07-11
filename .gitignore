@@ -13,6 +13,9 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 
+# Generated logs & runtime artifacts (e.g. csv_errors.log from ingestion/csv_loader.py)
+*.log
+
 # Backtest fixtures — commit gzipped .csv.gz only (Story 0.4 AC9, no Git LFS).
 # Raw .csv is produced by tools/extract_fixtures.py and must not be committed.
 fixtures/backtest/*.csv

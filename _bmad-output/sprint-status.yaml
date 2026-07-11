@@ -12,7 +12,7 @@
 # Story Status: backlog | ready-for-dev | in-progress | review | done
 
 generated: 2026-07-03T16:15:00Z
-last_updated: 2026-07-09T00:00:00Z
+last_updated: 2026-07-11T00:00:00Z
 project: QuantumRadar
 project_key: NOKEY
 tracking_system: file-system
@@ -29,6 +29,15 @@ development_status:
   0-6-mock-wss-real-abi-logs: done   # prereq for 1E.1 realtime (mock logs must be ABI-decodable by Track 1B)
   epic-0-retrospective: optional
 
+  # ---------- Epic E: Environment & Configuration Provisioning [SETUP] ----------
+  epic-e: backlog
+  E-1-rpc-api-credentials: ready-for-dev       # config/ops - blocks Epic 1 realtime
+  E-2-contract-address-registry: ready-for-dev  # fills whitelist.yaml (needs 1B.3 schema)
+  E-3-webhook-test-endpoint: ready-for-dev      # config/ops - for Epic 5 alert test
+  E-4-environment-validation-script: ready-for-dev  # [BUILD] check_env script
+  E-5-usage-and-git-guide: review               # docs: usage guide + git workflow + git config
+  epic-e-retrospective: optional
+  
   # ---------- Epic 1: Data Ingestion (6 tracks: 1R research + 1A-1E) ----------
   epic-1: in-progress
   # Track 1R - Data Sourcing & Ground Truth (research, non-code)

@@ -54,6 +54,11 @@ N/A — API-only product.
 Chốt các JSON schema và fixtures đầu tiên để 4 Epic sau chạy song song bằng mock.
 **FRs covered:** partial FR1, FR5 foundation
 
+### Epic E: Environment & Configuration Provisioning `[SETUP]`
+Cấp và xác minh mọi credential + địa chỉ on-chain thật (RPC/WSS key, Etherscan key, whitelist contract, webhook test) để bất kỳ thành viên nào clone repo cũng chạy được pipeline với dữ liệu mainnet.
+**Enables:** FR1 (WSS key), FR2 (địa chỉ contract), FR4 (webhook target)
+**Chặn:** Epic 1 (cần WSS_URL + whitelist), Epic 5 (cần webhook target)
+
 ### Epic 1: Data Ingestion & State Management
 Realtime WebSocket + Event Decoding + Ring Buffer + Historical CSV.
 **FRs covered:** FR1, FR2
@@ -143,6 +148,82 @@ So that có thể phát triển Epic 1 downstream (filter, buffer) và test Epic
 **When** chạy `python -m tools.mock_wss --file=luna_2022_05_09.csv --speed=1x`.
 **Then** server listen `ws://localhost:8546`, phát log JSON đúng shape tương ứng `eth_subscribe`.
 **And** có flag `--speed=100x` để test nhanh.
+
+---
+
+## Epic E: Environment & Configuration Provisioning `[SETUP]`
+
+Cấp và xác minh mọi giá trị vận hành thật (API key, địa chỉ contract, webhook target) để mọi thành viên clone repo là chạy được ngay. Epic này bổ trợ code đã có: 1A.1 (loader đọc secrets) và 1B.3 (schema/loader whitelist) — Epic E là nơi **điền GIÁ TRỊ thật + kiểm chứng kết nối**, không viết lại loader.
+
+**Phân loại:** `[SETUP]` toàn bộ. E.1-E.3 là config/ops (không code production); E.4 là `[BUILD]` (script kiểm tra).
+
+**Bảo mật:** `.env` chứa secret — đã có trong `.gitignore`, KHÔNG commit. Chỉ commit `.env.example` (placeholder). Địa chỉ contract công khai được commit trong `contracts_whitelist.yaml`.
+
+### Story E.1: RPC & API Credential Provisioning `[SETUP]`
+
+As a Kỹ sư Dữ liệu,
+I want lấy và điền WSS_URL (Alchemy/Infura) + ETHERSCAN_API_KEY vào `.env` với hướng dẫn từng bước,
+So that pipeline realtime (1A) và tool extract/verify fixtures kết nối được mainnet.
+
+**Acceptance Criteria:**
+**Given** `.env.example` liệt kê biến bắt buộc (WSS_URL, ETHERSCAN_API_KEY).
+**When** đăng ký free-tier Alchemy/Infura + Etherscan và điền giá trị vào `.env`.
+**Then** `docs/environment_setup.md` mô tả rõ: nơi lấy từng key, tier miễn phí, rate limit, cách dán vào `.env`.
+**And** smoke test kết nối: `eth_subscribe` (WSS) nhận ít nhất 1 block header, và 1 call Etherscan trả HTTP 200.
+**And** `.env` KHÔNG bị commit (nằm trong `.gitignore`); chỉ `.env.example` được commit.
+
+### Story E.2: Contract & Wallet Address Registry `[SETUP]`
+
+As a Kỹ sư Dữ liệu,
+I want điền địa chỉ mainnet thật cần giám sát vào `contracts_whitelist.yaml` (Uniswap V3 pools, Aave V2/V3 Pool),
+So that router 1B.4 lọc đúng contract, không bỏ sót/nhầm scope.
+
+**Acceptance Criteria:**
+**Given** schema whitelist từ Story 1B.3.
+**When** thêm các địa chỉ core: Uniswap V3 USDC/WETH pool `0x88e6A0c2dDD26FEEb64F039a2c41296FcB3f5640`, Aave V2 Pool `0x7d2768dE32b0b80b7a3454c06BdAc94A69DDc7A9`, Aave V3 Pool `0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2`.
+**Then** mỗi entry ghi rõ `protocol`, `pool_meta` (token0/token1/fee nếu có), và checksum địa chỉ hợp lệ.
+**And** `load_whitelist()` (1B.3) load file thật không lỗi validation.
+**And** mỗi địa chỉ có 1 link Etherscan trong comment để truy vết.
+
+### Story E.3: Webhook Test Endpoint Config `[SETUP]`
+
+As a Kỹ sư Backend,
+I want cấu hình 1 webhook URL nhận thử để test luồng alert (Epic 5),
+So that có thể kiểm chứng RED/YELLOW payload được gửi đi mà chưa cần client thật.
+
+**Acceptance Criteria:**
+**Given** emitter Epic 5 gửi POST tới subscriber URL.
+**When** dùng endpoint test (webhook.site public URL, HOẶC local echo `python -m tools.webhook_echo` listen `http://localhost:9000/hook`).
+**Then** `docs/environment_setup.md` ghi cách lấy URL test + cách đăng ký qua `/subscribe`.
+**And** gửi thử 1 payload mẫu → endpoint nhận đúng JSON khớp `contracts/fragility_alert.schema.json`.
+**And** URL test lưu vào `.env` (WEBHOOK_TEST_URL), không hard-code.
+
+### Story E.4: Environment Validation Script `[BUILD]`
+
+As a Kỹ sư Dữ liệu,
+I want 1 lệnh `python -m tools.check_env` kiểm tra đủ biến môi trường + ping mọi dịch vụ ngoài, in PASS/FAIL,
+So that thành viên mới biết ngay môi trường đã sẵn sàng hay còn thiếu gì.
+
+**Acceptance Criteria:**
+**Given** `.env` đã điền theo E.1-E.3.
+**When** chạy `python -m tools.check_env`.
+**Then** kiểm và in kết quả từng mục: (1) biến bắt buộc có mặt, (2) WSS kết nối + nhận block, (3) Etherscan trả 200, (4) whitelist load được, (5) webhook test nhận payload.
+**And** exit code 0 nếu tất cả PASS, 1 nếu có FAIL; mỗi dòng có ✅/❌ + gợi ý khắc phục.
+**And** chạy được ngay sau khi clone + `cp .env.example .env` (báo FAIL rõ ràng khi chưa điền key, không traceback).
+
+### Story E.5: Project Usage & Git Workflow Guide `[SETUP]`
+
+As a Thành viên mới của team,
+I want tài liệu hướng dẫn chạy project cơ bản + quy ước & cách dùng Git hằng ngày, kèm cấu hình Git thực tế (`.gitignore`, `CONTRIBUTING.md`, template commit/PR),
+So that clone repo là biết ngay cách setup/chạy/test và cách đóng góp code đúng quy ước, không cần hỏi.
+
+**Acceptance Criteria:**
+**Given** repo đã là git repo có sẵn commit history.
+**When** publish `docs/usage_guide.md` + `docs/git_workflow.md` + `CONTRIBUTING.md`.
+**Then** `docs/usage_guide.md` mô tả: clone, `cp .env.example .env`, cài deps, chạy pipeline (`python -m ingestion.pipeline --source=mock`), chạy mock WSS, chạy `pytest` — mỗi bước copy-paste được.
+**And** `docs/git_workflow.md` mô tả git cơ bản (clone/status/add/commit/push/pull, tạo & switch branch, merge/rebase cơ bản, xử lý conflict) + quy ước branch (`feat/`, `fix/`, `chore/`) + convention commit message (khớp history hiện có: `feat:`, `fix:`, `chore:`) + PR flow.
+**And** `.gitignore` được rà soát đảm bảo che `.env`, `__pycache__/`, `.pytest_cache/`, `*.log`, artifact tạm; `CONTRIBUTING.md` tóm tắt quy ước + link 2 doc trên.
+**And** không có secret nào bị commit (`.env` vẫn ignored).
 
 ---
 
