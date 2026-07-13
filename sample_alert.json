@@ -1,0 +1,6 @@
+{
+  "timestamp": "2022-05-07T21:04:48Z",
+  "fragility_score": 92.50,
+  "alert_level": "RED",
+  "trigger_protocols": ["aave_v3"]
+}
