@@ -1,5 +1,10 @@
 # Deferred Work
 
+## Deferred from: code review of 2A.1 / 2A.2 (2026-07-26)
+
+- **Whitespace-only node `id` / edge `src`/`dst` accepted** — `min_length=1` permits `" "`. The locked `graph_snapshot.schema.json` also has no `pattern`, so this is a contract-level gap, not a 2A regression. Revisit if/when tightening id format in a schema v2. [`engine/graph/node_types.py`, `engine/graph/edge_types.py`]
+- **Edge `metadata` value depth/size unbounded** — `metadata: dict[str, Any]` limits key count to 32 but not nested depth or value size. Consistent with schema `additionalProperties: true`; downstream MAY drop metadata. Harden only if metadata becomes network-facing. [`engine/graph/edge_types.py`]
+
 ## Deferred from: code review of story-0.5 (2026-07-05)
 
 - **`_first_sub` one-shot never re-armed** — a client subscribing after the replay finishes gets a silent dead subscription. By-design "replay từ đầu file, không lưu offset"; late-join re-arm is v2. [`tools/mock_wss/server.py`]

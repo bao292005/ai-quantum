@@ -78,13 +78,13 @@ development_status:
   2R-1-node-feature-catalog: review  # P0 - blocks 2B.2
   2R-2-graph-topology-design: review  # P0 - blocks tensor shape 2B.*
   # Track 2A - Graph Construction
-  2A-1-node-type-schema: ready-for-dev
-  2A-2-edge-type-schema: ready-for-dev
-  2A-3-graph-builder-networkx: backlog
-  2A-4-edge-weight-formula: backlog
+  2A-1-node-type-schema: in-progress  # code review 2026-07-26: 1 patch + 2 decisions open (see 2A-code-review-notes.md)
+  2A-2-edge-type-schema: in-progress  # code review 2026-07-26: 1 patch + 2 decisions open (see 2A-code-review-notes.md)
+  2A-3-graph-builder-networkx: review
+  2A-4-edge-weight-formula: review
   # Track 2B - Tensor Mapping
-  2B-1-adjacency-tensor-constructor: ready-for-dev
-  2B-2-node-feature-tensor: backlog
+  2B-1-adjacency-tensor-constructor: review
+  2B-2-node-feature-tensor: review
   2B-3-normalization-layer: backlog
   2B-4-sparse-tensor-variant: backlog
   # Track 2C - Validation

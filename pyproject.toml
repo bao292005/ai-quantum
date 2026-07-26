@@ -19,6 +19,9 @@ dependencies = [
     "numpy>=1.24",
     "pyyaml>=6.0",
     "requests>=2.31",
+    "pydantic>=2",
+    "networkx>=3",
+    "torch>=2.1",
 ]
 
 [project.optional-dependencies]
@@ -30,7 +33,7 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["core*", "tools*", "ingestion*"]
+include = ["core*", "tools*", "ingestion*", "engine*"]
 exclude = ["tests*", "contracts*", "fixtures*", "_bmad*", "_bmad-output*"]
 
 [tool.pytest.ini_options]

@@ -5,7 +5,7 @@ type: build
 
 # Story 2A.1: Node Type Schema
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -30,18 +30,24 @@ so that **graph có typology rõ ràng, validated, và khớp đúng contract `g
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Dựng package `engine/`** (AC1)
-  - [ ] Tạo `engine/__init__.py`, `engine/graph/__init__.py` (rỗng)
-  - [ ] Thêm `"engine*"` vào `include` của `[tool.setuptools.packages.find]` trong `pyproject.toml`
-  - [ ] Thêm `pydantic>=2` vào `dependencies` trong `pyproject.toml` (hiện chỉ có transitively qua web3 — khai explicit)
-- [ ] **Task 2 — Define models** (AC2, AC3)
-  - [ ] `NodeFeatures(BaseModel)` với 5 field + constraints (dùng `Field(ge=0)`, `Field(ge=0, le=1)`)
-  - [ ] `Node(BaseModel)` với `id`, `type: Literal[...]`, `features: NodeFeatures`
-  - [ ] `model_config = ConfigDict(extra="forbid")` để khớp `additionalProperties: false` của schema
-- [ ] **Task 3 — Round-trip validation** (AC4)
-  - [ ] `model_dump()` → dict khớp schema 0.2 (test bằng jsonschema validator)
-- [ ] **Task 4 — Unit tests** (AC5)
-  - [ ] `tests/unit/test_node_types.py`: 3 node/type positive, 3 negative, 1 round-trip
+- [x] **Task 1 — Dựng package `engine/`** (AC1)
+  - [x] Tạo `engine/__init__.py`, `engine/graph/__init__.py` (rỗng)
+  - [x] Thêm `"engine*"` vào `include` của `[tool.setuptools.packages.find]` trong `pyproject.toml`
+  - [x] Thêm `pydantic>=2` vào `dependencies` trong `pyproject.toml` (hiện chỉ có transitively qua web3 — khai explicit)
+- [x] **Task 2 — Define models** (AC2, AC3)
+  - [x] `NodeFeatures(BaseModel)` với 5 field + constraints (dùng `Field(ge=0)`, `Field(ge=0, le=1)`)
+  - [x] `Node(BaseModel)` với `id`, `type: Literal[...]`, `features: NodeFeatures`
+  - [x] `model_config = ConfigDict(extra="forbid")` để khớp `additionalProperties: false` của schema
+- [x] **Task 3 — Round-trip validation** (AC4)
+  - [x] `model_dump()` → dict khớp schema 0.2 (test bằng jsonschema validator)
+- [x] **Task 4 — Unit tests** (AC5)
+  - [x] `tests/unit/test_node_types.py`: 3 node/type positive, 3 negative, 1 round-trip
+
+### Review Findings (code review 2026-07-26)
+
+- [ ] [Review][Decision] Lax type coercion on NodeFeatures floats — pydantic v2 default (lax) accepts `True→1.0` and `"0.5"→0.5`. `strict=True` would also reject legit `int→float` (e.g. `tvl_usd=100`). [engine/graph/node_types.py]
+- [ ] [Review][Patch] `inf` accepted on unbounded feature floats — `tvl_usd`/`volume_24h_usd`/`price_usd`/`volatility` accept `float('inf')` (verified); survives `model_dump()` + Python jsonschema; `json.dumps` emits non-standard `Infinity`. Fix: `Field(..., allow_inf_nan=False)`. [engine/graph/node_types.py:32-36]
+- [x] [Review][Defer] Whitespace-only `id` accepted — `min_length=1` allows `" "`; locked schema has no `pattern` either (contract-level, not this change). [engine/graph/node_types.py]
 
 ## Dev Notes
 
@@ -109,9 +115,36 @@ pyproject.toml                ← UPDATE (packages.find += engine*; dependencies
 
 ### Agent Model Used
 
+claude-opus-4-6 (bmad-dev-story)
+
 ### Debug Log References
 
+Full suite green: **276 passed, 1 skipped** (mock WSS :8546 not running — pre-existing),
+0 regressions. New tests: `tests/unit/test_node_types.py` 11 passed.
+
 ### Completion Notes List
+
+- **AC1:** Created `engine/` + `engine/graph/` packages (empty `__init__.py`).
+  `pyproject.toml`: added `"engine*"` to `packages.find.include` and `pydantic>=2`
+  to `dependencies` (was only transitive via web3).
+- **AC2/AC3:** `engine/graph/node_types.py` — `Node` (`id` 1..128, `type: Literal[protocol|pool|token]`,
+  `features: NodeFeatures`) + `NodeFeatures` with the **canonical 5-feature set
+  from Story 2R.1** (schema-0.2): `tvl_usd`, `volume_24h_usd`, `price_usd`,
+  `volatility` (`ge=0`), `connectivity` (`ge=0, le=1`). Both use
+  `ConfigDict(extra="forbid")` to mirror `additionalProperties:false`.
+  Exported `NodeType` alias too.
+- **AC4:** Round-trip test embeds `Node(...).model_dump()` into a minimal
+  GraphSnapshot (1 node, 0 edges) and validates via
+  `core.schemas.validate_graph_snapshot` (reuses existing draft-2020-12 validator).
+- **AC5:** 11 tests — 3 positive (one per node type) + boundary connectivity 0/1,
+  6 negative (bad type, missing feature, connectivity>1, negative tvl, extra
+  feature field, empty id), 1 round-trip.
+
+### Change Log
+
+| Date | Change |
+|---|---|
+| 2026-07-26 | Scaffolded `engine/graph/` package; added `Node`/`NodeFeatures` Pydantic v2 models matching locked `graph_snapshot.schema.json#/$defs/node` (5-feature canonical set per 2R.1); pyproject `engine*` + `pydantic>=2`; 11 unit tests. Status → review. |
 
 ### File List
 

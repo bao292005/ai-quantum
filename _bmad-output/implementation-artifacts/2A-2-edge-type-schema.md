@@ -5,7 +5,7 @@ type: build
 
 # Story 2A.2: Edge Type Schema
 
-Status: ready-for-dev
+Status: in-progress
 
 ## Story
 
@@ -32,16 +32,24 @@ so that **entanglement giữa các node được biểu diễn đúng, validated
 
 ## Tasks / Subtasks
 
-- [ ] **Task 1 — Define `Edge` model** (AC2, AC3)
-  - [ ] `edge_type: Literal[...]` (3 giá trị snake_case y hệt schema)
-  - [ ] `weight: float = Field(ge=0, le=1)`
-  - [ ] `src/dst: str = Field(min_length=1, max_length=128)`
-  - [ ] `metadata: dict | None = None`; validator giới hạn ≤ 32 keys
-  - [ ] `model_config = ConfigDict(extra="forbid")`
-- [ ] **Task 2 — Round-trip validation** (AC4)
-  - [ ] `model_dump(exclude_none=True)` → validate trong GraphSnapshot tối thiểu (1 node + 1 edge) qua jsonschema
-- [ ] **Task 3 — Unit tests** (AC5)
-  - [ ] `tests/unit/test_edge_types.py`: 3 positive + ≥4 negative + 1 round-trip
+- [x] **Task 1 — Define `Edge` model** (AC2, AC3)
+  - [x] `edge_type: Literal[...]` (3 giá trị snake_case y hệt schema)
+  - [x] `weight: float = Field(ge=0, le=1)`
+  - [x] `src/dst: str = Field(min_length=1, max_length=128)`
+  - [x] `metadata: dict | None = None`; validator giới hạn ≤ 32 keys
+  - [x] `model_config = ConfigDict(extra="forbid")`
+- [x] **Task 2 — Round-trip validation** (AC4)
+  - [x] `model_dump(exclude_none=True)` → validate trong GraphSnapshot tối thiểu (1 node + 1 edge) qua jsonschema
+- [x] **Task 3 — Unit tests** (AC5)
+  - [x] `tests/unit/test_edge_types.py`: 3 positive + ≥4 negative + 1 round-trip
+
+### Review Findings (code review 2026-07-26)
+
+- [ ] [Review][Decision] `metadata=None` → plain `model_dump()` emits `{"metadata": null}` which fails schema (`metadata` is `type: object`, no null). Round-trip only safe via `model_dump(exclude_none=True)`. Decide: enforce with a serializer vs document the exclude_none consumer convention. [engine/graph/edge_types.py]
+- [ ] [Review][Decision] Lax type coercion on `weight` (`True→1.0`, `"0.5"→0.5`) — same tradeoff as 2A.1. [engine/graph/edge_types.py]
+- [ ] [Review][Patch] Add `allow_inf_nan=False` to `weight` for consistency with 2A.1 (bounded `le=1` already blocks `+inf`, so low risk). [engine/graph/edge_types.py]
+- [x] [Review][Defer] `metadata` value depth/size unbounded (`dict[str, Any]`) — consistent with locked schema `additionalProperties: true`; downstream MAY drop (contract-level). [engine/graph/edge_types.py]
+- [x] [Review][Defer] Whitespace-only `src`/`dst` accepted (contract-level, no schema pattern). [engine/graph/edge_types.py]
 
 ## Dev Notes
 
@@ -93,9 +101,36 @@ Nếu 2A.1 chưa chạy: cũng cần `engine/__init__.py`, `engine/graph/__init_
 
 ### Agent Model Used
 
+claude-opus-4-6 (bmad-dev-story)
+
 ### Debug Log References
 
+Full suite green: **289 passed, 1 skipped** (mock WSS :8546 — pre-existing),
+0 regressions. New: `tests/unit/test_edge_types.py` 13 passed.
+
 ### Completion Notes List
+
+- **AC1/AC2:** `engine/graph/edge_types.py` — `Edge` (`src`/`dst` 1..128,
+  `weight: float ge=0 le=1`, `edge_type: Literal[liquidity_flow|borrow_position|shared_collateral]`
+  snake_case per contract, `metadata: dict|None`). `ConfigDict(extra="forbid")`.
+  Exported `EdgeType` alias. Reused the `engine/graph/` skeleton from 2A.1 (no
+  re-scaffold needed).
+- **AC3:** `weight` bounds via `Field(ge=0, le=1)`; `metadata` >32 keys rejected
+  via `@field_validator` (`_MAX_METADATA_KEYS=32`).
+- **AC4:** Round-trip embeds `edge.model_dump(exclude_none=True)` into a minimal
+  2-node + 1-edge GraphSnapshot and validates via
+  `core.schemas.validate_graph_snapshot` (edge src/dst reference real node ids to
+  pass the runtime dangling-edge invariant). Second round-trip test confirms
+  `exclude_none` drops `metadata` cleanly (schema does not require it).
+- **AC5:** 13 tests — 3 positive (one per edge type) + boundary weight 0/1 +
+  metadata-at-limit(32), 6 negative (bad edge_type incl. CamelCase, weight -0.1,
+  weight 1.1, metadata 33 keys, empty src, extra field), 2 round-trip.
+
+### Change Log
+
+| Date | Change |
+|---|---|
+| 2026-07-26 | Added `Edge` Pydantic v2 model matching locked `graph_snapshot.schema.json#/$defs/edge` (snake_case edge types, weight [0,1], metadata ≤32-key guard); 13 unit tests incl. round-trip. Reused 2A.1 engine skeleton. Status → review. |
 
 ### File List
 

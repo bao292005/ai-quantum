@@ -5,7 +5,7 @@ type: build
 
 # Story 2B.1: Adjacency Tensor Constructor
 
-Status: ready-for-dev
+Status: review
 
 # ⚠️ NEW DEPENDENCY: story này giới thiệu **PyTorch** lần đầu vào codebase (chưa cài). Xem Dev Notes trước khi code.
 
@@ -33,18 +33,18 @@ so that **MPS engine (Epic 3) có input tensor chuẩn để phân rã và tính
 
 ## Tasks / Subtasks
 
-- [ ] **Task 0 — Thêm PyTorch** (blocker)
-  - [ ] Thêm `torch>=2.1` vào `dependencies` trong `pyproject.toml`
-  - [ ] Cài **CPU-only**: `pip install torch` (NFR5 — local-first CPU, KHÔNG GPU). Xác nhận `python -c "import torch; print(torch.__version__)"`
-  - [ ] Đảm bảo `engine*` đã có trong `packages.find include` (từ 2A.1; nếu chưa thì thêm)
-- [ ] **Task 1 — Package `engine/tensor/`** (AC1)
-  - [ ] `engine/tensor/__init__.py`, `engine/tensor/adjacency.py`
-- [ ] **Task 2 — Implement `adjacency_tensor`** (AC1-AC5)
-  - [ ] Build `node_id -> index` từ thứ tự `graph["nodes"]`
-  - [ ] `A = torch.zeros((N, N), dtype=torch.float32)`; loop edges cộng dồn đối xứng
-  - [ ] ValueError khi src/dst không có trong map
-- [ ] **Task 3 — Benchmark + tests** (AC6, AC7)
-  - [ ] Fixture 50-node GraphSnapshot; test `< 5ms` warm; các test invariant
+- [x] **Task 0 — Thêm PyTorch** (blocker)
+  - [x] Thêm `torch>=2.1` vào `dependencies` trong `pyproject.toml`
+  - [x] Cài **CPU-only**: `pip install torch` (NFR5 — local-first CPU, KHÔNG GPU). Xác nhận `python -c "import torch; print(torch.__version__)"` → 2.13.0
+  - [x] Đảm bảo `engine*` đã có trong `packages.find include` (từ 2A.1; nếu chưa thì thêm)
+- [x] **Task 1 — Package `engine/tensor/`** (AC1)
+  - [x] `engine/tensor/__init__.py`, `engine/tensor/adjacency.py`
+- [x] **Task 2 — Implement `adjacency_tensor`** (AC1-AC5)
+  - [x] Build `node_id -> index` từ thứ tự `graph["nodes"]`
+  - [x] `A = torch.zeros((N, N), dtype=torch.float32)`; loop edges cộng dồn đối xứng
+  - [x] ValueError khi src/dst không có trong map
+- [x] **Task 3 — Benchmark + tests** (AC6, AC7)
+  - [x] Fixture 50-node GraphSnapshot; test `< 5ms` warm; các test invariant
 
 ## Dev Notes
 
@@ -95,9 +95,38 @@ pyproject.toml            ← UPDATE (dependencies += torch>=2.1; engine* includ
 
 ### Agent Model Used
 
+claude-opus-4-6 (bmad-dev-story)
+
 ### Debug Log References
 
+PyTorch **2.13.0** installed CPU-only (user-approved). `tests/unit/test_adjacency_tensor.py`
+10 passed. **Benchmark: adjacency_tensor(N=52) = 1.514 ms warm** (AC6 target <5ms — met).
+Full suite **311 passed, 1 skipped** (mock WSS), 0 regressions.
+
 ### Completion Notes List
+
+- **AC1:** `engine/tensor/adjacency.py` → `adjacency_tensor(graph) -> torch.Tensor`,
+  shape `(N, N)`, dtype `torch.float32`. `torch>=2.1` added to pyproject deps.
+- **AC2:** node index = order of appearance in `graph["nodes"]` (`node_id -> i` map);
+  edges resolve `src`/`dst` via the map.
+- **AC3:** symmetric — `A[i,j] += w` and `A[j,i] += w`; parallel edges accumulate
+  (documented: a cell may exceed 1). All edge types symmetrized in v1 (modelling
+  assumption noted in docstring for 2R.2/3R.1 to ratify).
+- **AC4:** diagonal 0; explicit self-loop (`src==dst`) adds weight once to `A[i,i]`.
+- **AC5:** unknown `src`/`dst` → `ValueError` (never silently dropped); 0 edges →
+  zero `(N,N)` matrix.
+- **AC6:** warm benchmark on a real ~50-node graph from `build_graph` (2A.3) = 1.514 ms.
+- **AC7:** 10 tests — shape/dtype, ordering+values, symmetry, parallel-edge accumulate,
+  diagonal zero, self-loop, unknown src/dst ValueError, zero-edge zero matrix, benchmark.
+
+**Input contract:** accepts a plain GraphSnapshot dict (schema 0.2) — pairs directly
+with `build_graph` (2A.3) output. Signature frozen for Story 2C.1 invariant tests.
+
+### Change Log
+
+| Date | Change |
+|---|---|
+| 2026-07-26 | Added `engine/tensor/adjacency.py` `adjacency_tensor()`: (N,N) float32 symmetric adjacency from GraphSnapshot; ValueError on dangling edge; 10 tests + N=52 benchmark (1.514ms). Introduced PyTorch 2.13.0 (CPU) + `torch>=2.1` dep. Status → review. |
 
 ### File List
 
