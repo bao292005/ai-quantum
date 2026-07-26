@@ -85,7 +85,7 @@ development_status:
   # Track 2B - Tensor Mapping
   2B-1-adjacency-tensor-constructor: review
   2B-2-node-feature-tensor: review
-  2B-3-normalization-layer: backlog
+  2B-3-normalization-layer: review
   2B-4-sparse-tensor-variant: backlog
   # Track 2C - Validation
   2C-1-tensor-invariant-tests: backlog
