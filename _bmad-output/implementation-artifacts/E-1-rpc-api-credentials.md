@@ -19,7 +19,7 @@ so that **pipeline realtime (Track 1A) và tool extract/verify fixtures kết n�
 
 2. **AC2 — `.env.example` đủ biến:** `.env.example` liệt kê `WSS_URL`, `ETHERSCAN_API_KEY` (và `WEBHOOK_TEST_URL` cho E.3) với placeholder rõ ràng + comment.
 
-3. **AC3 — Smoke test WSS:** Kết nối `WSS_URL` qua `eth_subscribe("newHeads")` nhận được ít nhất 1 block header trong 30s.
+3. **AC3 — Smoke test WSS:** Kết nối `WSS_URL` qua `eth_subscribe("newHeads")` nhận được ít nÍ›hất 1 block header trong 30s.
 
 4. **AC4 — Smoke test Etherscan:** 1 call tới Etherscan API (VD `?module=proxy&action=eth_blockNumber`) trả HTTP 200 + JSON hợp lệ.
 

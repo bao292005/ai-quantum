@@ -12,7 +12,7 @@
 # Story Status: backlog | ready-for-dev | in-progress | review | done
 
 generated: 2026-07-03T16:15:00Z
-last_updated: 2026-07-11T00:00:00Z
+last_updated: 2026-07-26T00:00:00Z
 project: QuantumRadar
 project_key: NOKEY
 tracking_system: file-system
@@ -73,17 +73,17 @@ development_status:
   epic-1-retrospective: optional
 
   # ---------- Epic 2: Tensor Graph Modeling (4 tracks: 2R research + 2A-2C) ----------
-  epic-2: backlog
+  epic-2: in-progress
   # Track 2R - Model Input Design (research, non-code)
-  2R-1-node-feature-catalog: ready-for-dev  # P0 - blocks 2B.2
-  2R-2-graph-topology-design: ready-for-dev  # P0 - blocks tensor shape 2B.*
+  2R-1-node-feature-catalog: review  # P0 - blocks 2B.2
+  2R-2-graph-topology-design: review  # P0 - blocks tensor shape 2B.*
   # Track 2A - Graph Construction
-  2A-1-node-type-schema: backlog
-  2A-2-edge-type-schema: backlog
+  2A-1-node-type-schema: ready-for-dev
+  2A-2-edge-type-schema: ready-for-dev
   2A-3-graph-builder-networkx: backlog
   2A-4-edge-weight-formula: backlog
   # Track 2B - Tensor Mapping
-  2B-1-adjacency-tensor-constructor: backlog
+  2B-1-adjacency-tensor-constructor: ready-for-dev
   2B-2-node-feature-tensor: backlog
   2B-3-normalization-layer: backlog
   2B-4-sparse-tensor-variant: backlog
