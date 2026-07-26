@@ -86,11 +86,11 @@ development_status:
   2B-1-adjacency-tensor-constructor: review
   2B-2-node-feature-tensor: review
   2B-3-normalization-layer: review
-  2B-4-sparse-tensor-variant: backlog
+  2B-4-sparse-tensor-variant: review
   # Track 2C - Validation
-  2C-1-tensor-invariant-tests: backlog
-  2C-2-heatmap-visualization: backlog
-  2C-3-reference-dataset-comparison: backlog
+  2C-1-tensor-invariant-tests: review
+  2C-2-heatmap-visualization: review
+  2C-3-reference-dataset-comparison: review
   epic-2-retrospective: optional
 
   # ---------- Epic 3: MPS Algorithm Optimization (6 tracks: 3R design + 3A-3E) ----------
