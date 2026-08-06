@@ -16,6 +16,11 @@ __pycache__/
 # Generated logs & runtime artifacts (e.g. csv_errors.log from ingestion/csv_loader.py)
 *.log
 
+# Benchmark run artifacts (Story 3A.2/3A.3); baseline.json IS committed (3A.4 locks it)
+bench_report/report.html
+bench_report/latency.json
+bench_report/memory.md
+
 # Backtest fixtures — commit gzipped .csv.gz only (Story 0.4 AC9, no Git LFS).
 # Raw .csv is produced by tools/extract_fixtures.py and must not be committed.
 fixtures/backtest/*.csv

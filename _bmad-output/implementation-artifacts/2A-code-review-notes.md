@@ -129,5 +129,11 @@ Giới hạn 32 **key** nhưng mỗi value (`Any`) có thể là dict/list lồn
 | DF1 | id/src/dst whitespace | Defer | — |
 | DF2 | metadata depth | Defer | — |
 
-**Trạng thái story 2A.1/2A.2:** để `in-progress` cho tới khi bạn review xong tài liệu này và quyết định P1/D1/D2.
-Khi bạn sẵn sàng, chỉ cần nói cách xử lý từng mục, tôi sẽ áp patch.
+**Trạng thái story 2A.1/2A.2:** ✅ **ĐÓNG 2026-08-06** — chuyển `in-progress → review`.
+
+Xử lý đã áp (theo khuyến nghị):
+- **P1 — SỬA:** thêm `allow_inf_nan=False` vào cả 5 field `NodeFeatures` (`node_types.py`) + 5 test parametrized reject `inf/-inf/nan` (`test_node_types.py`).
+- **D1 — GIỮ LAX, DEFER:** không đổi code; rủi ro ép kiểu bool/str→float chấp nhận cho PoC.
+- **D2 — DOCUMENT:** ghi convention `model_dump(exclude_none=True)` vào docstring `Edge` (`edge_types.py`).
+
+Kiểm chứng: full suite **454 passed, 1 skipped** (`/opt/anaconda3/bin/python3 -m pytest`).

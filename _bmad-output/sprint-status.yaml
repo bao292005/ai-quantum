@@ -78,8 +78,8 @@ development_status:
   2R-1-node-feature-catalog: review  # P0 - blocks 2B.2
   2R-2-graph-topology-design: review  # P0 - blocks tensor shape 2B.*
   # Track 2A - Graph Construction
-  2A-1-node-type-schema: in-progress  # code review 2026-07-26: 1 patch + 2 decisions open (see 2A-code-review-notes.md)
-  2A-2-edge-type-schema: in-progress  # code review 2026-07-26: 1 patch + 2 decisions open (see 2A-code-review-notes.md)
+  2A-1-node-type-schema: review  # code review closed 2026-08-06: P1 patched (allow_inf_nan=False + 5 tests); D1 lax deferred; D2 exclude_none convention documented
+  2A-2-edge-type-schema: review  # code review closed 2026-08-06: D2 exclude_none convention documented in Edge docstring
   2A-3-graph-builder-networkx: review
   2A-4-edge-weight-formula: review
   # Track 2B - Tensor Mapping
@@ -96,13 +96,13 @@ development_status:
   # ---------- Epic 3: MPS Algorithm Optimization (6 tracks: 3R design + 3A-3E) ----------
   epic-3: backlog
   # Track 3R - Model & Math Design (research, non-code) - PREREQUISITE
-  3R-1-mps-fragility-math-spec: ready-for-dev  # P0 - blocks all Epic 3
-  3R-2-literature-review: backlog             # P1
-  3R-3-naive-baseline-detector: backlog       # P1
+  3R-1-mps-fragility-math-spec: review  # DONE 2026-08-06 → research/mps_fragility_model.md (oracle A=0.789690, B=0.741117 verified); unblocks Epic 3
+  3R-2-literature-review: review             # DONE 2026-08-06 → research/literature_review.md (9 real sources; R1-R5 novelty risks flagged)
+  3R-3-naive-baseline-detector: review       # DONE 2026-08-06 → research/baseline_detector.md (B0 util / B1 spectral ablation ladder; equal-FP lead-time comparison)
   # Track 3A - Baseline
-  3A-1-naive-tensor-contraction: backlog
-  3A-2-pytest-benchmark-harness: backlog
-  3A-3-memory-profiler-integration: backlog
+  3A-1-naive-tensor-contraction: review  # DONE 2026-08-06 → engine/mps/naive.py fragility_raw(A,X); oracle A=0.789690/B=0.741117/path=0.630930; 469 passed
+  3A-2-pytest-benchmark-harness: review  # DONE 2026-08-06 → tests/bench_mps.py (pytest-benchmark; p50/95/99; bench_report/report.html+latency.json; p95>baseline*1.10 gate). N15 p95~0.058ms / N50 p95~0.10ms
+  3A-3-memory-profiler-integration: review  # DONE 2026-08-06 → tests/bench_memory.py (tracemalloc fwd-pass peak + top alloc; bench_report/memory.md; gate<500MB). peak ~KB, RSS 238MB info
   3A-4-baseline-metrics-report: backlog
   # Track 3B - Bond Dimension
   3B-1-bond-dimension-runner: backlog

@@ -7,6 +7,11 @@ names used in prose.
 
 This story defines edge STRUCTURE and the ``weight`` range ``[0, 1]`` only. The
 weight *formula* (Story 2A.4) is applied later by the Graph Builder (2A.3).
+
+Serialization convention (Story 2A.2 code review D2): ``metadata`` defaults to
+``None``, so ALWAYS serialize with ``model_dump(exclude_none=True)``. A bare
+``model_dump()`` emits ``{"metadata": null}``, which the schema rejects
+(``metadata`` is typed ``object``, not nullable).
 """
 
 from __future__ import annotations

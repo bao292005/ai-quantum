@@ -25,15 +25,19 @@ class NodeFeatures(BaseModel):
 
     Ranges mirror ``graph_snapshot.schema.json``: all features are ``>= 0`` and
     ``connectivity`` is additionally bounded to ``[0, 1]``.
+
+    ``allow_inf_nan=False`` rejects ``inf``/``nan`` explicitly (Story 2A.1 code
+    review P1): JSON has no ``Infinity`` literal, and either value would poison
+    downstream tensor math (Epic 2/3).
     """
 
     model_config = ConfigDict(extra="forbid")
 
-    tvl_usd: float = Field(ge=0)
-    volume_24h_usd: float = Field(ge=0)
-    price_usd: float = Field(ge=0)
-    volatility: float = Field(ge=0)
-    connectivity: float = Field(ge=0, le=1)
+    tvl_usd: float = Field(ge=0, allow_inf_nan=False)
+    volume_24h_usd: float = Field(ge=0, allow_inf_nan=False)
+    price_usd: float = Field(ge=0, allow_inf_nan=False)
+    volatility: float = Field(ge=0, allow_inf_nan=False)
+    connectivity: float = Field(ge=0, le=1, allow_inf_nan=False)
 
 
 class Node(BaseModel):

@@ -82,6 +82,18 @@ def test_extra_feature_field_rejected() -> None:
         NodeFeatures(**feats)
 
 
+@pytest.mark.parametrize(
+    "field",
+    ["tvl_usd", "volume_24h_usd", "price_usd", "volatility", "connectivity"],
+)
+def test_inf_and_nan_rejected(field: str) -> None:
+    # P1 (Story 2A.1 code review): inf/nan must not survive validation — JSON has
+    # no Infinity literal and either poisons downstream tensor math.
+    for bad in (float("inf"), float("-inf"), float("nan")):
+        with pytest.raises(ValidationError):
+            NodeFeatures(**{**_VALID_FEATURES, field: bad})
+
+
 def test_empty_id_rejected() -> None:
     with pytest.raises(ValidationError):
         Node(id="", type="pool", features=NodeFeatures(**_VALID_FEATURES))
