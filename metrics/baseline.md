@@ -87,6 +87,6 @@ Oracle values are the locked correctness reference (tolerance `± 1e-5`,
 | 3E.1 (gate) | keep `p95 < 30 ms` on this machine (currently ~0.10 ms) |
 | 3A.2 (regression) | reject any commit with `p95 > baseline × 1.10` |
 
-**Git tag:** this document is tagged `baseline-v0` on the commit that introduces
-the baseline code (`engine/mps/naive.py` + benchmark harnesses). See Change Log /
-sprint notes for the exact commit.
+**Git tag:** `baseline-v0` → commit `36f0c77` ("feat: MPS fragility engine
+baseline (Epic 3 Track 3R+3A) and Epic 2 review fixes"), which introduces the
+baseline code (`engine/mps/naive.py` + benchmark harnesses).

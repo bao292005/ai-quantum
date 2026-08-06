@@ -26,6 +26,7 @@ from engine.mps.naive import fragility_raw
 REPORT_DIR = Path(__file__).resolve().parent.parent / "bench_report"
 BASELINE_PATH = REPORT_DIR / "baseline.json"
 REGRESSION_TOL = 0.10  # fail if p95 > baseline * (1 + TOL)
+GATE_MS = 30.0  # Story 3E.1 — MPS forward-pass p95 hard budget (NFR1 subcomponent)
 
 
 def _synth(n: int, seed: int = 0) -> tuple[torch.Tensor, torch.Tensor]:
@@ -98,6 +99,11 @@ def _run(benchmark, results: dict, name: str, n: int) -> None:
     assert 0.0 <= out <= 1.0
     stat = _percentiles_ms(benchmark)
     results[name] = stat
+
+    # Story 3E.1 — hard latency gate on the MPS forward pass.
+    assert stat["p95"] < GATE_MS, (
+        f"{name} p95 {stat['p95']:.4f}ms exceeds 3E.1 gate {GATE_MS}ms"
+    )
 
     baseline = _load_baseline()
     if name in baseline:

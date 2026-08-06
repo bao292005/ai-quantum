@@ -103,23 +103,23 @@ development_status:
   3A-1-naive-tensor-contraction: review  # DONE 2026-08-06 → engine/mps/naive.py fragility_raw(A,X); oracle A=0.789690/B=0.741117/path=0.630930; 469 passed
   3A-2-pytest-benchmark-harness: review  # DONE 2026-08-06 → tests/bench_mps.py (pytest-benchmark; p50/95/99; bench_report/report.html+latency.json; p95>baseline*1.10 gate). N15 p95~0.058ms / N50 p95~0.10ms
   3A-3-memory-profiler-integration: review  # DONE 2026-08-06 → tests/bench_memory.py (tracemalloc fwd-pass peak + top alloc; bench_report/memory.md; gate<500MB). peak ~KB, RSS 238MB info
-  3A-4-baseline-metrics-report: backlog
-  # Track 3B - Bond Dimension
-  3B-1-bond-dimension-runner: backlog
-  3B-2-tradeoff-matrix-generator: backlog
-  3B-3-accuracy-speed-visualization: backlog
+  3A-4-baseline-metrics-report: review  # DONE 2026-08-06 → metrics/baseline.md (3 tables) + git tag baseline-v0 @ commit 36f0c77
+  # Track 3B - Bond Dimension — DEFERRED (baseline 290-545x under 30ms gate; see research/epic3_optimization_decision.md; re-activate at N>=128)
+  3B-1-bond-dimension-runner: backlog       # DEFERRED (premature opt at v1 scale)
+  3B-2-tradeoff-matrix-generator: backlog   # DEFERRED
+  3B-3-accuracy-speed-visualization: backlog # DEFERRED
   # Track 3C - SVD Truncation
-  3C-1-svd-decomposition-wrapper: backlog
-  3C-2-truncation-threshold-selector: backlog
-  3C-3-recompression-pipeline: backlog
-  3C-4-numerical-stability-guard: backlog
-  # Track 3D - Kernel Optimization
-  3D-1-contraction-path-optimizer: backlog
-  3D-2-torchscript-compilation: backlog
-  3D-3-tensor-reuse-cache-warmup: backlog
+  3C-1-svd-decomposition-wrapper: review    # DONE 2026-08-06 → engine/mps/truncation.py truncated_svd (recon<5% @128 rank32)
+  3C-2-truncation-threshold-selector: review # DONE 2026-08-06 → auto_rank(matrix, energy=0.95)
+  3C-3-recompression-pipeline: backlog      # DEFERRED (no v1 benefit; wire truncation into fragility_raw at N>=128)
+  3C-4-numerical-stability-guard: review    # DONE 2026-08-06 → numerical_rank + rank-deficiency guard in truncated_svd (warn, no crash)
+  # Track 3D - Kernel Optimization — DEFERRED (negative ROI micro-opt on ~0.1ms path; see epic3_optimization_decision.md)
+  3D-1-contraction-path-optimizer: backlog  # DEFERRED
+  3D-2-torchscript-compilation: backlog     # DEFERRED
+  3D-3-tensor-reuse-cache-warmup: backlog   # DEFERRED
   # Track 3E - End-to-End Verification
-  3E-1-mps-forward-pass-gate: backlog
-  3E-2-regression-suite: backlog
+  3E-1-mps-forward-pass-gate: review        # DONE 2026-08-06 → p95<30ms gate in tests/bench_mps.py (currently ~0.1ms, ~290x headroom)
+  3E-2-regression-suite: review             # DONE 2026-08-06 → metrics/optimized.md + tag mps-optimized-v1 (==baseline; opt deferred)
   epic-3-retrospective: optional
 
   # ---------- Epic 4: Risk Calibration & Isolation ----------
