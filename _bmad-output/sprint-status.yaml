@@ -123,17 +123,17 @@ development_status:
   epic-3-retrospective: optional
 
   # ---------- Epic 4: Risk Calibration & Isolation ----------
-  epic-4: backlog
+  epic-4: in-progress  # 4.1/4.2 calibration + 4R.1/3/4 research + 4.3/4.4 isolation DONE (review); only 4R.2 IPC spike DEFERRED (EngineProcess uses mp.Queue, no spike needed). See research/decision_b0_v1_detector.md
   # Architecture & Latency Design (research, non-code)
-  4R-1-latency-budget: ready-for-dev   # P0 - blocks all perf gates
-  4R-2-ipc-mechanism-spike: backlog    # P1 - blocks 4.3
-  4R-3-failure-mode-analysis: backlog  # P1
-  4R-4-data-flow-diagram: backlog      # P1
-  4-1-luna-ust-fragility-calibration: in-progress  # 2026-08-06 → research/4.1_calibration_findings.md. MPS v1 features NO separation (normal>LUNA). B0 baseline BUILT (engine/baseline.py) → Success Signal ACHIEVED: borrow-rate thr=normal-max gives FP=0%, LUNA lead ~29h / FTX ~47h (test_baseline_success_signal.py). MPS still must beat B0 (open). 4.2/4.3/4.4 depend on chosen detector.
+  4R-1-latency-budget: review          # DONE 2026-08-06 → research/latency_budget.md (B0 re-scope: total ~42ms < 50ms; detector ~1ms, dominated by WS/webhook I/O)
+  4R-2-ipc-mechanism-spike: backlog    # DEFERRED (no separate engine process in v1; B0 not CPU-bound)
+  4R-3-failure-mode-analysis: review   # DONE 2026-08-06 → research/failure_modes.md (F1-F8 FMEA; F8 = off-chain false-negative honesty item)
+  4R-4-data-flow-diagram: review       # DONE 2026-08-06 → docs/data_flow.md (mermaid v1 single-process B0 flow + boundary contracts)
+  4-1-luna-ust-fragility-calibration: review  # DONE 2026-08-06 → calibration/luna_calibration.md. B0 detector calibrated: window=300/stride=100, score=100*clamp((rate-16)/(32-16)), RED>=90/YEL>=70. LUNA RED lead ~27h (1612min), NORMAL FP=0% both levels. AC MET. Caveat: regime alert not pinpoint; FTX no RED pre-cascade (low-severity → 4.2). MPS parked (see decision_b0_v1_detector.md).
   # B0 baseline (3R.3 build): engine/baseline.py borrow_activity/utilization_ratio — the working v1 detector candidate
-  4-2-ftx-cross-validation: backlog
-  4-3-multiprocessing-wrapper: backlog
-  4-4-backpressure-circuit-breaker: backlog
+  4-2-ftx-cross-validation: review     # DONE 2026-08-06 → calibration/ftx_validation.md. B0 (LUNA params, no re-tune) does NOT generalize to FTX: pre-cascade max score 50 (<YELLOW 70), 0 alert before cascade. Off-chain/low-footprint cascade = documented v1 false-negative class. Do NOT lower B_HIGH.
+  4-3-multiprocessing-wrapper: review # DONE 2026-08-06 → engine/runner.py EngineProcess (spawn, separate PID, clean shutdown no zombie, detector-agnostic picklable callable, per-frame exception isolation F4)
+  4-4-backpressure-circuit-breaker: review # DONE 2026-08-06 → EngineProcess.submit drop-oldest + engine_frames_dropped_total Counter + INFO log; non-blocking submit (200 frames <500ms while slow worker). Tests test_engine_runner.py (6)
   epic-4-retrospective: optional
 
   # ---------- Epic 5: Alert System & API ----------
