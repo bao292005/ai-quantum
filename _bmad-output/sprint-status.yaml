@@ -137,11 +137,11 @@ development_status:
   epic-4-retrospective: optional
 
   # ---------- Epic 5: Alert System & API ----------
-  epic-5: backlog
-  5-1-fastapi-subscribe-unsubscribe: backlog
-  5-2-json-payload-formatter: backlog
-  5-3-async-webhook-emitter: backlog
-  5-4-api-authentication: backlog
+  epic-5: in-progress  # ALL 4 stories DONE (review): 5.1 API + 5.2 payload + 5.3 emitter + 5.4 auth. fastapi/uvicorn added to deps (user-approved)
+  5-1-fastapi-subscribe-unsubscribe: review  # DONE 2026-08-06 → emitter/api.py create_app + emitter/registry.py (in-mem + JSON persist); POST /subscribe DELETE /unsubscribe GET /subscribers; tests test_api.py
+  5-2-json-payload-formatter: review  # DONE 2026-08-06 → emitter/payload.py format_alert + engine.baseline.fragility_score (calibration mapping, resolves code-review M2); schema-validated; tests test_payload.py (14)
+  5-3-async-webhook-emitter: review   # DONE 2026-08-06 → emitter/webhook.py emit() parallel gather + 1 retry + ERROR log, injectable poster (aiohttp default); tests test_webhook_emitter.py (4)
+  5-4-api-authentication: review      # DONE 2026-08-06 → X-API-Key dependency (401 missing/invalid) + per-key fixed-window rate limit (429 over rate_limit, default 100/min) in emitter/api.py
   epic-5-retrospective: optional
 
   # ---------- Epic 6: E2E Verification & NFR Audit ----------

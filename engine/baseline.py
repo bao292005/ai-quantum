@@ -53,4 +53,36 @@ def utilization_ratio(events: Iterable[Event]) -> float:
     return borrow / (supply + 1)
 
 
-__all__ = ["borrow_supply_counts", "borrow_activity", "utilization_ratio"]
+# --- Calibrated score mapping (Story 4.1 → 5.2) -----------------------------
+# Locked in calibration/luna_calibration.md: score ramps 0→100 as the windowed
+# borrow rate goes from the calm-control max (B0_SCORE_LOW) to 2× that
+# (B0_SCORE_HIGH). Verified: LUNA RED (score ≥ 90) ~27 h early, FP = 0% on the
+# normal control. (Resolves code-review M2 — the mapping now lives in source.)
+B0_SCORE_LOW = 16
+B0_SCORE_HIGH = 32
+
+
+def fragility_score(
+    borrow_rate: float,
+    *,
+    low: float = B0_SCORE_LOW,
+    high: float = B0_SCORE_HIGH,
+) -> float:
+    """Map a windowed borrow rate to a ``fragility_score`` in ``[0, 100]``.
+
+    ``score = 100 · clamp((rate − low) / (high − low), 0, 1)``.
+    """
+    if high <= low:
+        raise ValueError(f"high ({high}) must exceed low ({low})")
+    x = (borrow_rate - low) / (high - low)
+    return max(0.0, min(1.0, x)) * 100.0
+
+
+__all__ = [
+    "borrow_supply_counts",
+    "borrow_activity",
+    "utilization_ratio",
+    "fragility_score",
+    "B0_SCORE_LOW",
+    "B0_SCORE_HIGH",
+]
