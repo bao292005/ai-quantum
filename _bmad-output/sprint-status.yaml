@@ -145,8 +145,8 @@ development_status:
   epic-5-retrospective: optional
 
   # ---------- Epic 6: E2E Verification & NFR Audit ----------
-  epic-6: backlog
-  6-1-e2e-latency-benchmark: backlog
-  6-2-no-gpu-runtime-verify: backlog
-  6-3-success-signal-proof: backlog
+  epic-6: in-progress  # 6.1/6.2 DONE (review); 6.3 PARTIAL (LUNA proven, FTX documented miss)
+  6-1-e2e-latency-benchmark: review  # DONE 2026-08-06 → emitter/pipeline.py evaluate_and_emit (detector→payload→emit orchestrator) + tests/bench_e2e.py. E2E p95~0.5ms/p99~3ms ≪ NFR1 (50/80ms). benchmarks/e2e_latency.md
+  6-2-no-gpu-runtime-verify: review  # DONE 2026-08-06 → tests/unit/test_no_gpu.py (NFR5: B0 no-torch; MPS CPU tensors; cuda not required)
+  6-3-success-signal-proof: review   # DONE-PARTIAL 2026-08-06 → demo/success_signal_proof.md. E2E: LUNA 122 RED, first RED +26.9h early, all delivered, FP=0% normal. FTX = documented false-negative (0 RED pre-cascade). AC "LUNA AND FTX" only partially met — FTX out of scope v1. No screencast (text artifact).
   epic-6-retrospective: optional

@@ -20,6 +20,7 @@ __pycache__/
 bench_report/report.html
 bench_report/latency.json
 bench_report/memory.md
+benchmarks/e2e_latency.md  # regenerated, machine-specific (Story 6.1)
 
 # Backtest fixtures — commit gzipped .csv.gz only (Story 0.4 AC9, no Git LFS).
 # Raw .csv is produced by tools/extract_fixtures.py and must not be committed.
