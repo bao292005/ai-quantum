@@ -94,7 +94,7 @@ development_status:
   epic-2-retrospective: optional
 
   # ---------- Epic 3: MPS Algorithm Optimization (6 tracks: 3R design + 3A-3E) ----------
-  epic-3: backlog
+  epic-3: in-progress  # 3R+3A+3C(primitives)+3E DONE (review); 3B/3C.3/3D DEFERRED (right-sized, see research/epic3_optimization_decision.md)
   # Track 3R - Model & Math Design (research, non-code) - PREREQUISITE
   3R-1-mps-fragility-math-spec: review  # DONE 2026-08-06 → research/mps_fragility_model.md (oracle A=0.789690, B=0.741117 verified); unblocks Epic 3
   3R-2-literature-review: review             # DONE 2026-08-06 → research/literature_review.md (9 real sources; R1-R5 novelty risks flagged)
@@ -129,7 +129,8 @@ development_status:
   4R-2-ipc-mechanism-spike: backlog    # P1 - blocks 4.3
   4R-3-failure-mode-analysis: backlog  # P1
   4R-4-data-flow-diagram: backlog      # P1
-  4-1-luna-ust-fragility-calibration: backlog
+  4-1-luna-ust-fragility-calibration: in-progress  # 2026-08-06 → research/4.1_calibration_findings.md. MPS v1 features NO separation (normal>LUNA). B0 baseline BUILT (engine/baseline.py) → Success Signal ACHIEVED: borrow-rate thr=normal-max gives FP=0%, LUNA lead ~29h / FTX ~47h (test_baseline_success_signal.py). MPS still must beat B0 (open). 4.2/4.3/4.4 depend on chosen detector.
+  # B0 baseline (3R.3 build): engine/baseline.py borrow_activity/utilization_ratio — the working v1 detector candidate
   4-2-ftx-cross-validation: backlog
   4-3-multiprocessing-wrapper: backlog
   4-4-backpressure-circuit-breaker: backlog
