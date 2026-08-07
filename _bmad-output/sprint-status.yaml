@@ -149,4 +149,35 @@ development_status:
   6-1-e2e-latency-benchmark: review  # DONE 2026-08-06 → emitter/pipeline.py evaluate_and_emit (detector→payload→emit orchestrator) + tests/bench_e2e.py. E2E p95~0.5ms/p99~3ms ≪ NFR1 (50/80ms). benchmarks/e2e_latency.md
   6-2-no-gpu-runtime-verify: review  # DONE 2026-08-06 → tests/unit/test_no_gpu.py (NFR5: B0 no-torch; MPS CPU tensors; cuda not required)
   6-3-success-signal-proof: review   # DONE-PARTIAL 2026-08-06 → demo/success_signal_proof.md. E2E: LUNA 122 RED, first RED +26.9h early, all delivered, FP=0% normal. FTX = documented false-negative (0 RED pre-cascade). AC "LUNA AND FTX" only partially met — FTX out of scope v1. No screencast (text artifact).
-  epic-6-retrospective: optional
+  epic-6-retrospective: done  # 2026-08-06 → epic-6-retro-2026-08-06.md (project-wide v1 retro). VERDICT: do NOT ship v1 yet — close FTX gap first.
+
+# Retrospective action items (Epic 6 / project-wide v1)
+action_items:
+  - epic: 6
+    action: "R&D off-chain / price-oracle stress feed to catch FTX-class cascades (ship gate)"
+    owner: "Quants/AI"
+    status: open
+  - epic: 6
+    action: "Fix code-review M1 — make FP assertion in test_baseline_success_signal.py non-tautological"
+    owner: "Dev"
+    status: open
+  - epic: 6
+    action: "Widen normal-control fixtures (>=2 more calm windows) to harden the FP claim"
+    owner: "Data"
+    status: open
+  - epic: 6
+    action: "Realtime orchestrator — wire evaluate_and_emit into the WSS loop (extend 1E.1)"
+    owner: "Dev"
+    status: open
+  - epic: 6
+    action: "Document FTX false-negative + v1 semantics in README/alert docs"
+    owner: "Writer"
+    status: open
+  - epic: 6
+    action: "Process: run discrimination spike on real fixtures before building the full stack (research-heavy models)"
+    owner: "Team"
+    status: open
+  - epic: 6
+    action: "Process: enforce contract assumptions (e.g. X normalized) with tests/guards, not comments"
+    owner: "Team"
+    status: open
